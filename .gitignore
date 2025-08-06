@@ -1,0 +1,48 @@
+# Godot-specific игноры
+*.import/*
+.import/
+.godot/
+export_presets.cfg
+export/
+bin/
+release/
+debug/
+mono/
+logs/
+Assets/test_tcn/
+
+# Временные файлы редактора
+*.tmp
+*.~*
+*.blend1
+*.blend2
+
+# Системные файлы
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# IDE и редакторы
+.vscode/
+.idea/
+*.code-workspace
+
+# Локальные настройки
+editor_settings-3.tres
+override.cfg
+
+
+# Кэш и логи
+.cache/
+*.log
+*.txt
+Blender/addons/gls_blender_exp/__pycache__
+
+# Исключения (не игнорировать основные файлы проекта)
+!project.godot
+!*.gd
+!*.tscn
+!*.tres
+!*.gdshader 
+*.uid
+.vs/

@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="MappingModule" load_steps=2 format=3 uid="uid://ellolhd1qgml"]
+
+[ext_resource type="Script" path="res://addons/godot_shader_linker_(gsl)/Nodes/Moduls/Mapping.gd" id="1_ypr3o"]
+
+[resource]
+script = ExtResource("1_ypr3o")
+mapping_type = 0
+vector = Vector3(0, 0, 0)
+location = Vector3(0, 0, 0)
+rotation_degrees = Vector3(0, 0, 0)
+scale = Vector3(1, 1, 1)
+module_name = "Mapping"
+unique_id = "7bee17db-4836-4d7b-d131-caed2454c8a4"
+input_bindings = {}
+output_name = "output"

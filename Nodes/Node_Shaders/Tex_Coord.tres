@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="TextureCoordModule" load_steps=2 format=3 uid="uid://b155umq5bfmss"]
+
+[ext_resource type="Script" path="res://addons/godot_shader_linker_(gsl)/Nodes/Moduls/Texture_Coord.gd" id="1_lv1na"]
+
+[resource]
+script = ExtResource("1_lv1na")
+coord_type = 0
+use_blender_space = true
+module_name = "Unnamed"
+input_bindings = {}
+output_name = "output"

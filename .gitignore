@@ -10,6 +10,7 @@ debug/
 mono/
 logs/
 Assets/test_tcn/
+Nodes/Node_Shaders/
 
 # Временные файлы редактора
 *.tmp
@@ -46,3 +47,4 @@ Blender/addons/gls_blender_exp/__pycache__
 !*.gdshader 
 *.uid
 .vs/
+

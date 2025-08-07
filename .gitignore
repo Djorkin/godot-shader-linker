@@ -1,6 +1,8 @@
 # Godot-specific игноры
 *.import/*
 .import/
+icon.png.import
+Assets/Mat/
 .godot/
 export_presets.cfg
 export/

@@ -60,35 +60,22 @@ func get_code_blocks() -> Dictionary:
 	var vertex_lines := []
 	# Единожды вычисляем локальную координату, если понадобится
 	if any_active(active, ["Generated", "Object", "Camera", "Reflection"]):
-		vertex_lines.append("#ifdef WORLD_VERTEX_COORDS")
-		vertex_lines.append("\tvec3 _local_vtx = (inverse(MODEL_MATRIX) * vec4(VERTEX, 1.0)).xyz;")
-		vertex_lines.append("#else")
 		vertex_lines.append("\tvec3 _local_vtx = VERTEX;")
-		vertex_lines.append("#endif")
 
 	if "Generated" in active:
 		vertex_lines.append("{gen} = get_generated(_local_vtx);")
 	if "Object" in active:
 		vertex_lines.append("{obj} = get_object(_local_vtx, MODEL_MATRIX);")
 	if "Normal" in active:
-		# NORMAL также требует преобразования при world_vertex_coords
-		vertex_lines.append("#ifdef WORLD_VERTEX_COORDS")
-		vertex_lines.append("\tvec3 _local_nrm = normalize((inverse(MODEL_MATRIX) * vec4(NORMAL,0.0)).xyz);")
-		vertex_lines.append("#else")
 		vertex_lines.append("\tvec3 _local_nrm = NORMAL;")
-		vertex_lines.append("#endif")
 		vertex_lines.append("{normal} = get_normal(_local_nrm);")
 	if "Camera" in active:
 		vertex_lines.append("{camera} = get_camera(_local_vtx, MODEL_MATRIX, VIEW_MATRIX);")
 	# Varying только для Reflection
 	if needs_reflection_data:
-		vertex_lines.append("#ifdef WORLD_VERTEX_COORDS")
-		vertex_lines.append("\tvec3 _local_nrm = normalize((inverse(MODEL_MATRIX) * vec4(NORMAL,0.0)).xyz);")
-		vertex_lines.append("#else")
 		vertex_lines.append("\tvec3 _local_nrm = NORMAL;")
-		vertex_lines.append("#endif")
-		vertex_lines.append("v_world_pos_%s = get_world_pos(VIEW_MATRIX, MODELVIEW_MATRIX, _local_vtx);" % unique_id)
-		vertex_lines.append("v_world_normal_%s = get_world_normal(VIEW_MATRIX, MODELVIEW_MATRIX, _local_nrm);" % unique_id)
+		vertex_lines.append("v_world_pos_%s = get_world_pos(VIEW_MATRIX, MODEL_MATRIX, _local_vtx);" % unique_id)
+		vertex_lines.append("v_world_normal_%s = get_world_normal(VIEW_MATRIX, MODEL_MATRIX, _local_nrm);" % unique_id)
 	
 	if vertex_lines.size() > 0:
 		vertex_code = generate_code_block(

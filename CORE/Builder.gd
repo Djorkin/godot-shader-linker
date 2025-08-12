@@ -125,9 +125,6 @@ func build_shader() -> String:
 	if _defines.size() > 0:
 		shader_code += "\n".join(_defines.values()) + "\n"
 
-	# Определяем вспомогательные препроцессорные флаги
-	if _render_modes.has("world_vertex_coords"):
-		shader_code += "#define WORLD_VERTEX_COORDS\n"
 
 	# Блок include-директив
 	if _include_blocks.size() > 0:

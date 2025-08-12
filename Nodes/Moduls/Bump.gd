@@ -70,20 +70,32 @@ func get_code_blocks() -> Dictionary:
 	
 	if _input_sockets[idx_normal].source == null:
 		var global_decl_normal := "varying vec3 v_nrm_world_%s;" % unique_id
-		var global_decl_vert := "varying vec3 v_vert_%s;" % unique_id
+		var global_decl_vert := "varying vec3 v_pos_world_%s;" % unique_id
 
 		var vertex_code := """
- // {module}: {uid} (VERTEX)
+// {module}: {uid} (VERTEX)
 
-v_nrm_world_{uid} = NORMAL * ROT_MATRIX_Y_TO_Z;
-v_vert_{uid} = VERTEX.xzy;
+v_pos_world_{uid} = VERTEX;
+v_nrm_world_{uid} = NORMAL;
 
-""".format({"module": module_name, "uid": unique_id}).strip_edges()
+	""".format({"module": module_name, "uid": unique_id}).strip_edges()
 		blocks["global_nrm_%s" % unique_id] = {"stage":"global", "code": global_decl_normal}
 		blocks["global_vert_%s" % unique_id] = {"stage":"global", "code": global_decl_vert}
 		blocks["vertex_%s" % unique_id] = {"stage":"vertex", "code": vertex_code}
 		n_expr = "v_nrm_world_%s" % unique_id
 	else:
+		# Всегда требуется позиция в мировом пространстве для node_bump
+		var global_decl_vert := "varying vec3 v_pos_world_%s;" % unique_id
+		var vertex_code := """
+
+
+// {module}: {uid} (VERTEX)
+
+v_pos_world_{uid} = VERTEX;
+
+	""".format({"module": module_name, "uid": unique_id}).strip_edges()
+		blocks["global_vert_%s" % unique_id] = {"stage":"global", "code": global_decl_vert}
+		blocks["vertex_%s" % unique_id] = {"stage":"vertex", "code": vertex_code}
 		n_expr = inputs[idx_normal]
 	
 
@@ -91,23 +103,19 @@ v_vert_{uid} = VERTEX.xzy;
 
 
  // {module}: {uid} (FRAG)
-float height_val = {height};
-vec3 df = differentiate_texco(vec3(height_val));
-vec2 height_xy = df.xy;
-float pixel = max(1e-4, length(dFdx(SCREEN_UV)) + length(dFdy(SCREEN_UV)));
-float fw = {filter_width} / pixel / 100.0; 
-vec3 {out_var} = node_bump(
+ vec2 dHd_{uid} = vec2(dFdx({height}), dFdy({height}));
+ float fw_{uid} = max({filter_width}, 0.001);
+vec3 tmpN_{uid} = node_bump(
 		{strength},
 		{dist},
-		fw,
-		height_val,
+		fw_{uid},
 		{normal_expr},
-		height_xy,
+		dHd_{uid},
 		({invert} ? -1.0 : 1.0),
 		FRONT_FACING,
-		v_vert_{uid});
-{out_var} = {out_var} * ROT_MATRIX_Z_TO_Y;
-//{out_var} = normalize( (VIEW_MATRIX * vec4({out_var}, 0.0)).xyz);
+		v_pos_world_{uid});
+
+vec3 {out_var} = normalize((VIEW_MATRIX * vec4(tmpN_{uid}, 0.0)).xyz);
 
  """.strip_edges()
 	
@@ -128,5 +136,3 @@ vec3 {out_var} = node_bump(
 	return blocks
 
 
-func get_render_modes() -> Array[String]:
-	return ["world_vertex_coords"]

@@ -5,9 +5,6 @@ class_name Collector
 static var active_modules: Array[ShaderModule] = []
 static var registered_modules := {}
 
-# Shared varyings, собираемые из всех модулей
-static var shared_requirements : Dictionary = {}
-
 
 static func get_all_input_sockets() -> Array[InputSocket]:
 	var sockets: Array[InputSocket] = []
@@ -21,22 +18,12 @@ static func register_module(module: ShaderModule) -> void:
 		#active_modules.append(module)
 
 static func configure(builder: ShaderBuilder, shader_type : String = "spatial") -> void:
-	shared_requirements.clear()
-	for module in registered_modules.values():
-		if module and module.has_method("get_shared_requirements"):
-			var reqs = module.get_shared_requirements()
-			if typeof(reqs) == TYPE_DICTIONARY:
-				for key in reqs:
-					if not shared_requirements.has(key):
-						shared_requirements[key] = reqs[key]
+    # Новый подход: shared varyings собираются через SharedVaryings.request() из модулей.
+    # Сбрасываем накопленные запросы перед сборкой.
+    SharedVaryings.reset()
 
-	# Отладочный вывод
-	if shared_requirements.size() > 0:
-		print("[Collector] Shared varyings: " + str(shared_requirements))
-
-	builder.reset()
-	builder.shader_type(shader_type)
-	_apply_shared_varyings(builder)
+    builder.reset()
+    builder.shader_type(shader_type)
 	
 	var all_includes = []
 	for module in registered_modules.values():
@@ -51,9 +38,17 @@ static func configure(builder: ShaderBuilder, shader_type : String = "spatial") 
 	
 	var processed = {}
 	var execution_order = _topological_sort()
-	for module in execution_order:
-		if not processed.has(module.unique_id):
-			_apply_module(builder, module, processed)
+    for module in execution_order:
+        if not processed.has(module.unique_id):
+            _apply_module(builder, module, processed)
+
+    # Добавляем общий блок объявлений shared varyings и единый vertex-код один раз
+    var sv_decls = SharedVaryings.build_global_declarations()
+    if sv_decls != "":
+        builder.add_code(sv_decls, "shared_varyings_decls", "global")
+    var sv_vertex = SharedVaryings.build_vertex_code()
+    if sv_vertex != "":
+        builder.add_code(sv_vertex, "shared_varyings_vertex", "vertex")
 	
 	for module in execution_order:
 		module.update_active_sockets()
@@ -89,29 +84,6 @@ static func _visit(module: ShaderModule, visited: Dictionary, order: Array) -> v
 	order.append(module)
 
 const SharedVaryings = preload("res://addons/godot_shader_linker_(gsl)/CORE/SharedVaryings.gd")
-
-static func _apply_shared_varyings(builder: ShaderBuilder) -> void:
-	# Добавляет объявления и vertex-код для общих varying-переменных.
-	if shared_requirements.is_empty():
-		return
-
-	var vertex_lines: Array[String] = []
-	for key in shared_requirements:
-		var def: Dictionary = SharedVaryings.get_definition(key)
-		if def.is_empty():
-			push_warning("Shared varying '%s' not supported" % key)
-			continue
-
-		var type_str: String = str(def.get("type", "vec3"))
-		var var_name = "v_%s" % key
-		builder.add_code("varying %s %s;" % [type_str, var_name], "shared_var_%s" % key, "global")
-
-		var vcode: String = def.get("vertex_code", "")
-		if vcode.strip_edges() != "":
-			vertex_lines.append(vcode)
-
-	if vertex_lines.size() > 0:
-		builder.add_code("\n".join(vertex_lines), "shared_varyings_vertex", "vertex")
 
 static func _apply_module(builder: ShaderBuilder, module: ShaderModule, processed: Dictionary) -> void:
 	if processed.has(module.unique_id):

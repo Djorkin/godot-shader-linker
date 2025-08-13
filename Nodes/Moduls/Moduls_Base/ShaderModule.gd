@@ -139,6 +139,5 @@ func set_uniform_override(name: String, value) -> void:
 func get_uniform_override(name: String):
 	return _uniform_overrides.get(name, null)
 
-func get_shared_requirements() -> Dictionary:
-	return {}
+
 

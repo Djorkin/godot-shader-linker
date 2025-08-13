@@ -75,8 +75,11 @@ func get_code_blocks() -> Dictionary:
 		var vertex_code := """
 // {module}: {uid} (VERTEX)
 
-v_pos_world_{uid} = VERTEX;
-v_nrm_world_{uid} = NORMAL;
+TransformCtx ctx_{uid} = make_ctx(MODEL_MATRIX, MODEL_NORMAL_MATRIX,
+									 VIEW_MATRIX, INV_VIEW_MATRIX,
+									 PROJECTION_MATRIX, INV_PROJECTION_MATRIX);
+v_pos_world_{uid} = obj_to_world_pos_ctx(VERTEX, ctx_{uid});
+v_nrm_world_{uid} = obj_to_world_normal_ctx(NORMAL, ctx_{uid});
 
 	""".format({"module": module_name, "uid": unique_id}).strip_edges()
 		blocks["global_nrm_%s" % unique_id] = {"stage":"global", "code": global_decl_normal}
@@ -91,7 +94,10 @@ v_nrm_world_{uid} = NORMAL;
 
 // {module}: {uid} (VERTEX)
 
-v_pos_world_{uid} = VERTEX;
+TransformCtx ctx_{uid} = make_ctx(MODEL_MATRIX, MODEL_NORMAL_MATRIX,
+									 VIEW_MATRIX, INV_VIEW_MATRIX,
+									 PROJECTION_MATRIX, INV_PROJECTION_MATRIX);
+v_pos_world_{uid} = obj_to_world_pos_ctx(VERTEX, ctx_{uid});
 
 	""".format({"module": module_name, "uid": unique_id}).strip_edges()
 		blocks["global_vert_%s" % unique_id] = {"stage":"global", "code": global_decl_vert}
@@ -103,6 +109,9 @@ v_pos_world_{uid} = VERTEX;
 
 
  // {module}: {uid} (FRAG)
+ TransformCtx ctx_{uid} = make_ctx(MODEL_MATRIX, MODEL_NORMAL_MATRIX,
+                                 VIEW_MATRIX, INV_VIEW_MATRIX,
+                                 PROJECTION_MATRIX, INV_PROJECTION_MATRIX);
  vec2 dHd_{uid} = vec2(dFdx({height}), dFdy({height}));
  float fw_{uid} = max({filter_width}, 0.001);
 vec3 tmpN_{uid} = node_bump(
@@ -115,7 +124,7 @@ vec3 tmpN_{uid} = node_bump(
 		FRONT_FACING,
 		v_pos_world_{uid});
 
-vec3 {out_var} = normalize((VIEW_MATRIX * vec4(tmpN_{uid}, 0.0)).xyz);
+vec3 {out_var} = world_to_view_normal_ctx(tmpN_{uid}, ctx_{uid});
 
  """.strip_edges()
 	

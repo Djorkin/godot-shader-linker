@@ -5,6 +5,8 @@
 class_name NormalMapModule
 extends ShaderModule
 
+
+# Only Tangent Space is implemented. The rest work as stubs.
 enum NormalMapType {
 	TANGENT_SPACE,
 	OBJECT_SPACE,
@@ -13,9 +15,6 @@ enum NormalMapType {
 	BLENDER_WORLD_SPACE
 }
 
-#  Параметр экспорта, чтобы в инспекторе Godot была вся карта, даже если
-#  пока реализован только Tangent Space. Остальные работают как заглушки.
-#  Порядок строк совпадает с enum!
 @export_enum(
 	"Tangent Space",
 	"Object Space",
@@ -30,25 +29,25 @@ func _init() -> void:
 	super._init()
 	module_name = "NormalMap"
 	
-	_input_sockets = [
+	input_sockets = [
 		InputSocket.new("Strength", InputSocket.SocketType.FLOAT, 1.0),
 		InputSocket.new("Color", InputSocket.SocketType.VEC4, Vector4(0.5, 0.5, 1.0, 1.0))
 	]
-	_output_sockets = [
+	output_sockets = [
 		OutputSocket.new("Normal", OutputSocket.SocketType.VEC3)
 	]
 	
-	for socket in _output_sockets:
+	for socket in output_sockets:
 		socket.set_parent_module(self)
 
 func get_include_files() -> Array[String]:
 	return [PATHS.INC["NORMAL_MAP"]]
 
 func get_input_sockets() -> Array[InputSocket]:
-	return _input_sockets
+	return input_sockets
 
 func get_output_sockets() -> Array[OutputSocket]:
-	return _output_sockets
+	return output_sockets
 
 func get_uniform_definitions() -> Dictionary:
 	var uniforms = {}
@@ -67,13 +66,11 @@ func get_uniform_definitions() -> Dictionary:
 	return uniforms
 
 func get_code_blocks() -> Dictionary:
-	update_active_sockets()
 	var outputs := get_output_vars()
-	var inputs := _get_input_args()
+	var inputs := get_input_args()
 	var idx_strength := 0
 	var idx_color := 1
 	
-	# Если выход «Normal» не используется – код не генерируем
 	if not "Normal" in get_active_output_sockets():
 		return {}
 	

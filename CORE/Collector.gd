@@ -2,28 +2,38 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 class_name Collector
 
-static var active_modules: Array[ShaderModule] = []
-static var registered_modules := {}
+#var active_modules: Array = []
+var registered_modules := {}
 
-
-static func get_all_input_sockets() -> Array[InputSocket]:
+func get_all_input_sockets() -> Array[InputSocket]:
 	var sockets: Array[InputSocket] = []
 	for module in registered_modules.values():
 		sockets.append_array(module.get_input_sockets())
 	return sockets
 
-static func register_module(module: ShaderModule) -> void:
+func register_module(module) -> void:
 	if not registered_modules.has(module.unique_id):
 		registered_modules[module.unique_id] = module
 		#active_modules.append(module)
 
-static func configure(builder: ShaderBuilder, shader_type : String = "spatial") -> void:
-    # Новый подход: shared varyings собираются через SharedVaryings.request() из модулей.
-    # Сбрасываем накопленные запросы перед сборкой.
-    SharedVaryings.reset()
+func recompute_active_output_sockets():
+	var active_set := {}
+	for input_socket in get_all_input_sockets():
+		if input_socket.source != null:
+			active_set[input_socket.source] = true
+	for module in registered_modules.values():
+		module.active_output_sockets.clear()
+		for socket in module.get_output_sockets():
+			if active_set.has(socket):
+				module.active_output_sockets.append(socket.name)
 
-    builder.reset()
-    builder.shader_type(shader_type)
+func configure(builder: ShaderBuilder, shader_type : String = "spatial") -> void:
+	builder.reset()
+	builder.shader_type(shader_type)
+
+	# Локальная сессия shared для этой сборки
+	var shared := SharedVaryings.new()
+	shared.reset()
 	
 	var all_includes = []
 	for module in registered_modules.values():
@@ -37,29 +47,30 @@ static func configure(builder: ShaderBuilder, shader_type : String = "spatial") 
 			builder.add_include(include)
 	
 	var processed = {}
-	var execution_order = _topological_sort()
-    for module in execution_order:
-        if not processed.has(module.unique_id):
-            _apply_module(builder, module, processed)
-
-    # Добавляем общий блок объявлений shared varyings и единый vertex-код один раз
-    var sv_decls = SharedVaryings.build_global_declarations()
-    if sv_decls != "":
-        builder.add_code(sv_decls, "shared_varyings_decls", "global")
-    var sv_vertex = SharedVaryings.build_vertex_code()
-    if sv_vertex != "":
-        builder.add_code(sv_vertex, "shared_varyings_vertex", "vertex")
-	
+	var execution_order = topological_sort()
+	recompute_active_output_sockets()
 	for module in execution_order:
-		module.update_active_sockets()
+		if not processed.has(module.unique_id):
+			if module.has_method("set_shared"):
+				module.set_shared(shared)
+			apply_module(builder, module, processed)
 
-static func _topological_sort() -> Array:
+	# Добавляем общий блок объявлений shared varyings и единый vertex-код один раз
+	var sv_decls = shared.build_global_declarations()
+	if sv_decls != "":
+		builder.add_code(sv_decls, "shared_varyings_decls", "global")
+	var sv_vertex = shared.build_vertex_code()
+	if sv_vertex != "":
+		builder.add_code(sv_vertex, "shared_varyings_vertex", "vertex")
+	
+
+
+func topological_sort() -> Array:
 	var visited = {}
 	var order = []
 	
 	for module in registered_modules.values():
-		_visit(module, visited, order)
-	
+		visit(module, visited, order)
 	
 	print("Execution order of modules:")
 	for module in order:
@@ -67,7 +78,7 @@ static func _topological_sort() -> Array:
 	
 	return order
 
-static func _visit(module: ShaderModule, visited: Dictionary, order: Array) -> void:
+func visit(module, visited: Dictionary, order: Array) -> void:
 	if visited.has(module):
 		if visited[module]:
 			return
@@ -78,14 +89,12 @@ static func _visit(module: ShaderModule, visited: Dictionary, order: Array) -> v
 	visited[module] = false
 	for dependency in module.get_dependency():
 		print("Module %s depends on %s" % [module.unique_id, dependency.unique_id])
-		_visit(dependency, visited, order)
+		visit(dependency, visited, order)
 	
 	visited[module] = true
 	order.append(module)
 
-const SharedVaryings = preload("res://addons/godot_shader_linker_(gsl)/CORE/SharedVaryings.gd")
-
-static func _apply_module(builder: ShaderBuilder, module: ShaderModule, processed: Dictionary) -> void:
+func apply_module(builder: ShaderBuilder, module, processed: Dictionary) -> void:
 	if processed.has(module.unique_id):
 		return
 	
@@ -120,5 +129,5 @@ static func _apply_module(builder: ShaderBuilder, module: ShaderModule, processe
 	
 	processed[module.unique_id] = true
 
-static func _prefix_code(code: String, module: ShaderModule) -> String:
+func prefix_code(code: String, module: ShaderModule) -> String:
 	return code

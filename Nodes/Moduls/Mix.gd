@@ -47,37 +47,37 @@ func _init() -> void:
 func _configure_input_sockets() -> void:
     match mix_data_type:
         DataType.COLOR_TYPE:
-            _input_sockets = [
+            input_sockets = [
                 InputSocket.new("Factor", InputSocket.SocketType.FLOAT, 0.5),
                 InputSocket.new("A_Color", InputSocket.SocketType.VEC4, Vector4(0.5,0.5,0.5,1.0)),
                 InputSocket.new("B_Color", InputSocket.SocketType.VEC4, Vector4(0.5,0.5,0.5,1.0)),
             ]
         DataType.VECTOR_TYPE:
             if vector_factor_mode == VectorFactorMode.UNIFORM:
-                _input_sockets = [
+                input_sockets = [
                     InputSocket.new("Factor", InputSocket.SocketType.FLOAT, 0.5),
                     InputSocket.new("A_Vector", InputSocket.SocketType.VEC3, Vector3(0.5,0.5,0.5)),
                     InputSocket.new("B_Vector", InputSocket.SocketType.VEC3, Vector3(0.5,0.5,0.5)),
                 ]
             else:
-                _input_sockets = [
+                input_sockets = [
                     InputSocket.new("NonUniformFactor", InputSocket.SocketType.VEC3, Vector3(0.5,0.5,0.5)),
                     InputSocket.new("A_Vector", InputSocket.SocketType.VEC3, Vector3(0.5,0.5,0.5)),
                     InputSocket.new("B_Vector", InputSocket.SocketType.VEC3, Vector3(0.5,0.5,0.5)),
                 ]
         _:
-            _input_sockets = [
+            input_sockets = [
                 InputSocket.new("Factor", InputSocket.SocketType.FLOAT, 0.5),
                 InputSocket.new("A_Float", InputSocket.SocketType.FLOAT, 0.0),
                 InputSocket.new("B_Float", InputSocket.SocketType.FLOAT, 0.0)
             ]
 
-    _output_sockets = [
+    output_sockets = [
         OutputSocket.new("Color", OutputSocket.SocketType.VEC4),
         OutputSocket.new("Vector", OutputSocket.SocketType.VEC3),
         OutputSocket.new("Value", OutputSocket.SocketType.FLOAT),
     ]
-    for s in _output_sockets:
+    for s in output_sockets:
         s.set_parent_module(self)
 
 
@@ -89,10 +89,10 @@ func get_include_files() -> Array[String]:
 
 
 func get_input_sockets() -> Array[InputSocket]:
-    return _input_sockets
+    return input_sockets
 
 func get_output_sockets() -> Array[OutputSocket]:
-    return _output_sockets
+    return output_sockets
 
 func get_uniform_definitions() -> Dictionary:
     var u := {}
@@ -145,13 +145,12 @@ func get_uniform_definitions() -> Dictionary:
     return u
 
 func get_code_blocks() -> Dictionary:
-    update_active_sockets()
     var active := get_active_output_sockets()
     if active.is_empty():
         return {}
 
     var outputs := get_output_vars()
-    var inputs := _get_input_args()
+    var inputs := get_input_args()
 
     var blocks: Dictionary = {}
     var uid := unique_id
@@ -189,8 +188,8 @@ vec3 mix_color_{uid}(bool use_cf, bool use_cr, float Factor, vec3 A, vec3 B) {{
 
             var args_col := {
                 "uid": uid,
-                "cf": _get_prefixed_name("clamp_factor"),
-                "cr": _get_prefixed_name("clamp_result"),
+                "cf": get_prefixed_name("clamp_factor"),
+                "cr": get_prefixed_name("clamp_result"),
                 "factor": inputs[0],
                 "a": inputs[1] + ".rgb",
                 "b": inputs[2] + ".rgb",
@@ -220,7 +219,7 @@ vec4 {col_out} = vec4({vec_out}, 1.0);
                 "vec_out": vec_var,
                 "col_out": color_var,
                 "func": func_name,
-                "cf": _get_prefixed_name("clamp_factor"),
+                "cf": get_prefixed_name("clamp_factor"),
                 "factor": inputs[0],
                 "a": inputs[1],
                 "b": inputs[2],
@@ -243,7 +242,7 @@ vec4 {col_out} = vec4({val_out}, {val_out}, {val_out}, 1.0);
                 "val_out": val_var,
                 "vec_out": vec_var_f,
                 "col_out": color_var_f,
-                "cf": _get_prefixed_name("clamp_factor"),
+                "cf": get_prefixed_name("clamp_factor"),
                 "factor": inputs[0],
                 "a": inputs[1],
                 "b": inputs[2],

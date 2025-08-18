@@ -9,7 +9,7 @@ func _init() -> void:
 	super._init()
 	module_name = "Principled BSDF"
 	
-	_input_sockets = [
+	input_sockets = [
 		InputSocket.new("Base_Color", InputSocket.SocketType.VEC4, Vector4(0.8, 0.8, 0.8, 1.0)), # 0
 		InputSocket.new("Metallic", InputSocket.SocketType.FLOAT, 0.0), # 1
 		InputSocket.new("Roughness", InputSocket.SocketType.FLOAT, 0.5), # 2
@@ -42,11 +42,11 @@ func _init() -> void:
 		InputSocket.new("Thin_Film_Thickness", InputSocket.SocketType.FLOAT, 0.0), # 29
 		InputSocket.new("Thin_Film_IOR", InputSocket.SocketType.FLOAT, 1.33), # 30
 	]
-	_output_sockets = [
+	output_sockets = [
 		OutputSocket.new("BSDF", OutputSocket.SocketType.SHADER)
 	]
 	
-	for socket in _output_sockets:
+	for socket in output_sockets:
 		socket.set_parent_module(self)
 
 
@@ -54,7 +54,7 @@ func get_include_files() -> Array[String]:
 	return [PATHS.INC["PHYSICAL"], PATHS.INC["MATH"], PATHS.INC["MATERIAL"], PATHS.INC["BSDF_PRINCILED"]]
 
 func get_output_sockets() -> Array[OutputSocket]:
-	return _output_sockets
+	return output_sockets
 
 func get_uniform_definitions() -> Dictionary:
 	var u = {}
@@ -91,8 +91,8 @@ func get_compile_defines() -> Array[String]:
 	var defs: Array[String] = []
 
 	# Проверка Transmission первична — при наличии Transmission нужен и ALPHA_TRANSFER.
-	var trans_socket := _input_sockets[18]
-	var trans_val = _uniform_overrides.get("Transmission_Weight", _uniform_overrides.get("transmission_weight", trans_socket.default))
+	var trans_socket := input_sockets[18]
+	var trans_val = uniform_overrides.get("Transmission_Weight", uniform_overrides.get("transmission_weight", trans_socket.default))
 	var has_transmission := trans_socket.source != null or float(trans_val) > 0.0
 	if has_transmission:
 		defs.append("ALPHA_TRANSFER")
@@ -100,22 +100,22 @@ func get_compile_defines() -> Array[String]:
 		return defs
 
 	# Иначе проверяем Alpha
-	var alpha_socket := _input_sockets[4]
-	var alpha_val = _uniform_overrides.get("Alpha", _uniform_overrides.get("alpha", alpha_socket.default))
+	var alpha_socket := input_sockets[4]
+	var alpha_val = uniform_overrides.get("Alpha", uniform_overrides.get("alpha", alpha_socket.default))
 	if alpha_socket.source != null or not is_equal_approx(float(alpha_val), 1.0):
 		defs.append("ALPHA_TRANSFER")
 
 	return defs
 
 func get_input_sockets() -> Array[InputSocket]:
-	return _input_sockets
+	return input_sockets
 
 func get_code_blocks() -> Dictionary:
-	var inputs = _get_input_args()
+	var inputs = get_input_args()
 
 	# Если вход Normal не подключён, используем встроенную NORMAL
 	var normal_expr = ""
-	if _input_sockets[5].source == null:
+	if input_sockets[5].source == null:
 		normal_expr = "NORMAL"
 	else:
 		normal_expr = inputs[5]

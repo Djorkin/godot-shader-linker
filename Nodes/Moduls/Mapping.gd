@@ -14,20 +14,18 @@ func _init() -> void:
 	super._init()
 	module_name = "Mapping"
 	
-	_input_sockets = [
+	input_sockets = [
 		InputSocket.new("Vector", InputSocket.SocketType.VEC3, Vector3.ZERO),
 		InputSocket.new("Location", InputSocket.SocketType.VEC3, Vector3.ZERO),
 		InputSocket.new("Rotation", InputSocket.SocketType.VEC3, Vector3.ZERO),
 		InputSocket.new("Scale", InputSocket.SocketType.VEC3, Vector3.ONE)
 	]
-	_output_sockets = [
+	output_sockets = [
 		OutputSocket.new("Vector", OutputSocket.SocketType.VEC3)
 	]
 	
-	for socket in _output_sockets:
+	for socket in output_sockets:
 		socket.set_parent_module(self)
-	
-	update_active_sockets()
 
 func get_include_files() -> Array[String]:
 	return [PATHS.INC["MAPPING"]]
@@ -48,20 +46,19 @@ func get_uniform_definitions() -> Dictionary:
 	return uniforms
 
 func get_input_sockets() -> Array[InputSocket]: 
-	return _input_sockets
+	return input_sockets
 
 func get_output_sockets() -> Array[OutputSocket]:
-	return _output_sockets
+	return output_sockets
 
 func get_code_blocks() -> Dictionary:
-	update_active_sockets()
 	var active: Array[String] = get_active_output_sockets()
 	
 	if not "Vector" in active:
 		return {}
 	
 	var outputs = get_output_vars()
-	var inputs = _get_input_args()
+	var inputs = get_input_args()
 	
 	var rotation_arg: String
 	var in_socks = get_input_sockets()
@@ -90,7 +87,7 @@ vec3 {local_var} = apply_mapping(
 					"module": module_name,
 					"output": outputs["Vector"],
 					"local_var": outputs["Vector"],
-					"type": _get_prefixed_name("mapping_type"),
+					"type": get_prefixed_name("mapping_type"),
 					"vector": inputs[0],         # Vector
 					"location": inputs[1],       # Location
 					"rotation": rotation_arg,    # Rotation

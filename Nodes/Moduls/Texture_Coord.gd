@@ -9,7 +9,7 @@ func _init() -> void:
 	super._init()
 	module_name = "Texture Coordinate"
 	
-	_output_sockets = [
+	output_sockets = [
 		OutputSocket.new("Generated", OutputSocket.SocketType.VEC3),
 		OutputSocket.new("Normal", OutputSocket.SocketType.VEC3),
 		OutputSocket.new("UV", OutputSocket.SocketType.VEC3),
@@ -19,14 +19,14 @@ func _init() -> void:
 		OutputSocket.new("Reflection", OutputSocket.SocketType.VEC3)
 	]
 	
-	for socket in _output_sockets:
+	for socket in output_sockets:
 		socket.set_parent_module(self)
 
 func get_include_files() -> Array[String]:
 	return [PATHS.INC["BLENDER_COORDS"], PATHS.INC["TEX_COORD"]]
 
 func get_output_sockets() -> Array[OutputSocket]:
-	return _output_sockets
+	return output_sockets
 
 func get_code_blocks() -> Dictionary:
 	var outputs = get_output_vars()

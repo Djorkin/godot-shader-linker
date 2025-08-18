@@ -6,7 +6,6 @@ class_name Parser
 
 
 const Import = preload("res://addons/godot_shader_linker_(gsl)/CORE/Importer.gd")
-
 const SERVER_URL := "http://127.0.0.1:5050/link"
 
 signal builder_ready(builder)
@@ -25,7 +24,6 @@ func send_request() -> void:
 	var err := http.request(SERVER_URL)
 	if err != OK:
 		push_error("Failed to send request (%s)" % err)
-
 
 func _on_request_completed(result: int, response_code: int, headers: PackedStringArray, body: PackedByteArray, http: HTTPRequest) -> void:
 	if is_instance_valid(http):
@@ -48,6 +46,7 @@ func _on_request_completed(result: int, response_code: int, headers: PackedStrin
 
 	var text := body.get_string_from_utf8()
 	var data = JSON.parse_string(text)
+
 	if typeof(data) != TYPE_DICTIONARY:
 		push_error("[color=red]Invalid JSON or response format[/color]")
 		print_rich("[color=red]Invalid JSON or response format[/color]")
@@ -55,19 +54,22 @@ func _on_request_completed(result: int, response_code: int, headers: PackedStrin
 
 	# Краткий вывод: только количество нод и связей
 	if data.has("nodes") and data.has("links"):
-		var n = data["nodes"].size()
-		var l = data["links"].size()
-		print_rich("[color=green]Blender server[/color] → nodes=" + str(n) + ", links=" + str(l))
+		var nodes = data["nodes"].size()
+		var links = data["links"].size()
+		print_rich("[color=green]Blender server[/color] → nodes=" + str(nodes) + ", links=" + str(links))
 	else:
 		print_rich("[color=green]Blender server[/color] → " + str(data))
+	
+	data_transfer(data)
 
-	var builder: ShaderBuilder = Import.build_chain(data)
+func data_transfer(data: Dictionary) -> void:
+	var importer := Import.new()
+	var builder: ShaderBuilder = importer.build_chain(data)
 	if builder:
 		builder_ready.emit(builder)
+	save_json(data) # debug only
 
-	_save_json(data)
-
-func _save_json(data: Dictionary) -> void:
+func save_json(data: Dictionary) -> void:
 	var dir_path := "user://gsl_logs"
 	var material_name := "material"
 	if data.has("material") and typeof(data["material"]) == TYPE_STRING:

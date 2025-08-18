@@ -17,26 +17,20 @@ var fs_refresh_timer: Timer
 const MAX_RETRIES := 10
 var retry_count := 0
 
-const Collector = preload("Collector.gd")
-
-
 func _enter_tree() -> void:
-	_configure_file_dialog()
+	configure_file_dialog()
 
-
-func _configure_file_dialog() -> void:
+func configure_file_dialog() -> void:
 	file_dialog = EditorFileDialog.new()
 	file_dialog.file_mode = EditorFileDialog.FILE_MODE_SAVE_FILE
 	file_dialog.access = EditorFileDialog.ACCESS_RESOURCES
 	file_dialog.connect("file_selected", _on_file_selected)
 	add_child(file_dialog)
 
-
 func set_save_path(new_path: String) -> void:
 	save_path = new_path
 	if not DirAccess.dir_exists_absolute(save_path):
 		DirAccess.make_dir_recursive_absolute(save_path)
-
 
 func save_shader(builder: ShaderBuilder) -> void:
 	current_builder = builder
@@ -45,7 +39,6 @@ func save_shader(builder: ShaderBuilder) -> void:
 	file_dialog.current_dir = save_path
 	file_dialog.popup_centered(Vector2i(800, 600))
 
-
 func save_material(builder: ShaderBuilder) -> void:
 	current_builder = builder
 	file_dialog.title = "Сохранить материал"
@@ -53,13 +46,11 @@ func save_material(builder: ShaderBuilder) -> void:
 	file_dialog.current_dir = save_path
 	file_dialog.popup_centered(Vector2i(800, 600))
 
-
 func _on_file_selected(path: String) -> void:
 	if path.ends_with(".gdshader"):
 		save_shader_file(path)
 	elif path.ends_with(".tres"):
 		save_material_file(path)
-
 
 func save_shader_file(path: String) -> void:
 	var shader: Shader
@@ -76,7 +67,6 @@ func save_shader_file(path: String) -> void:
 	
 	var err = ResourceSaver.save(shader, path, ResourceSaver.FLAG_REPLACE_SUBRESOURCE_PATHS)
 	handle_save_result(err, path, "Шейдер")
-
 
 func save_material_file(path: String) -> void:
 	if not current_builder:
@@ -101,21 +91,21 @@ func save_material_file(path: String) -> void:
 	EditorInterface.get_resource_filesystem().scan()
 	pending_updates.clear()
 	
-	for mod_id in Collector.registered_modules:
-		var module = Collector.registered_modules[mod_id]
-		for override_key in module._uniform_overrides:
-			var value = module._uniform_overrides[override_key]
-			if override_key == "image_path":
-				var uniform_name = module._get_prefixed_name("image_texture")
-				if typeof(value) == TYPE_STRING:
-					pending_updates.append({
-						"mat_path": path,
-						"uniform": uniform_name,
-						"tex_path": value
-					})
-			else:
-				var uniform_name = module._get_prefixed_name(override_key)
-				material.set_shader_parameter(uniform_name, value)
+	#for mod_id in collector.registered_modules:
+		#var module = collector.registered_modules[mod_id]
+		#for override_key in module.uniform_overrides:
+			#var value = module.uniform_overrides[override_key]
+			#if override_key == "image_path":
+				#var uniform_name = module.get_prefixed_name("image_texture")
+				#if typeof(value) == TYPE_STRING:
+					#pending_updates.append({
+						#"mat_path": path,
+						#"uniform": uniform_name,
+						#"tex_path": value
+					#})
+			#else:
+				#var uniform_name = module.get_prefixed_name(override_key)
+				#material.set_shader_parameter(uniform_name, value)
 	
 	# если есть незагруженные текстуры – запустим таймер повторных попыток
 	if pending_updates.size() > 0:
@@ -165,7 +155,6 @@ func process_pending_updates():
 			retry_timer.stop()
 		print("[GSL] Failed to connect all textures (timeout)")
 
-
 func handle_save_result(error: Error, path: String, type: String) -> void:
 	match error:
 		OK:
@@ -174,13 +163,10 @@ func handle_save_result(error: Error, path: String, type: String) -> void:
 		_:
 			notify_error(error, type)
 
-
 func notify_success(type: String, path: String) -> void:
 	print_rich("[color=green]%s успешно сохранён:[/color] %s" % [type, path])
 	# Отложенный refresh, чтобы дождаться импорта ресурса
 	call_deferred("refresh_filesystem", path)
-
-
 
 func refresh_filesystem(path: String):
 	await get_tree().process_frame
@@ -194,7 +180,6 @@ func refresh_filesystem(path: String):
 
 func _on_fs_refresh_timeout():
 	EditorInterface.get_resource_filesystem().scan()
-
 
 func notify_error(error: Error, type: String) -> void:
 	var error_msg = "Ошибка сохранения %s (код %d)" % [type, error]

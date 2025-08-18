@@ -33,7 +33,7 @@ func _init() -> void:
     super._init()
     module_name = "Noise Texture"
 
-    _input_sockets = [
+    input_sockets = [
         InputSocket.new("Vector", InputSocket.SocketType.VEC3, Vector3.ZERO),
         InputSocket.new("W", InputSocket.SocketType.FLOAT, 0.0),
         InputSocket.new("Scale", InputSocket.SocketType.FLOAT, 5.0),
@@ -45,12 +45,12 @@ func _init() -> void:
         InputSocket.new("Distortion", InputSocket.SocketType.FLOAT, 0.0)
     ]
 
-    _output_sockets = [
+    output_sockets = [
         OutputSocket.new("Value", OutputSocket.SocketType.FLOAT),
         OutputSocket.new("Color", OutputSocket.SocketType.VEC4)
     ]
 
-    for socket in _output_sockets:
+    for socket in output_sockets:
         socket.set_parent_module(self)
 
 
@@ -65,10 +65,10 @@ func get_include_files() -> Array[String]:
     ]
 
 func get_input_sockets() -> Array[InputSocket]:
-    return _input_sockets
+    return input_sockets
 
 func get_output_sockets() -> Array[OutputSocket]:
-    return _output_sockets
+    return output_sockets
 
 func get_uniform_definitions() -> Dictionary:
     var u: Dictionary = {}
@@ -90,13 +90,12 @@ func get_uniform_definitions() -> Dictionary:
     return u
 
 func get_code_blocks() -> Dictionary:
-    update_active_sockets()
     var active := get_active_output_sockets()
     if active.is_empty():
         return {}
 
     var outputs := get_output_vars()
-    var inputs := _get_input_args()
+    var inputs := get_input_args()
 
     var blocks: Dictionary = {}
 
@@ -107,7 +106,7 @@ func get_code_blocks() -> Dictionary:
         vector_expr = "vec3(0.0)"
     else:
         var idx_vec := 0
-        if _input_sockets[idx_vec].source == null:
+        if input_sockets[idx_vec].source == null:
             # No connection use generated coords through varying
             need_varying = true
             var varying_name := "gen_vec_%s" % unique_id
@@ -151,7 +150,7 @@ func get_code_blocks() -> Dictionary:
         "offset": inputs[6],
         "distortion": inputs[8],
         "gain": inputs[7],
-        "normalize": _get_prefixed_name("normalize"),
+        "normalize": get_prefixed_name("normalize"),
         "noise_path": noise_path,
         "dim_define": dims_define,
         "fract_define": fract_define
@@ -313,6 +312,6 @@ float {value_out} = value_{uid};
 func get_compile_defines() -> Array[String]:
     var defs: Array[String] = []
     # If the "Vector" input is not connected, add an auxiliary constant
-    if _input_sockets.size() > 0 and _input_sockets[0].source == null:
+    if input_sockets.size() > 0 and input_sockets[0].source == null:
         defs.append("NOISE_NONE_CONNECTED")
     return defs

@@ -4,9 +4,9 @@
 @tool
 class_name ServerStatusListener
 
-var _udp: PacketPeerUDP
-var _thread: Thread
-var _running: bool = false
+var udp: PacketPeerUDP
+var thread: Thread
+var running: bool = false
 @export var port: int = 6020  # UDP-порт, на котором слушаем сообщения от Blender
 
 func _init(p_port: int = 6020):
@@ -14,38 +14,38 @@ func _init(p_port: int = 6020):
 
 # Запуск фонового прослушивания UDP-порта
 func start() -> void:
-	if _running:
+	if running:
 		return
 
-	_udp = PacketPeerUDP.new()
-	var err := _udp.bind(port, "127.0.0.1")
+	udp = PacketPeerUDP.new()
+	var err := udp.bind(port, "127.0.0.1")
 	if err != OK:
 		push_error("Failed to bind UDP port %d (%s)" % [port, str(err)])
 		return
 
-	_running = true
-	_thread = Thread.new()
-	_thread.start(Callable(self, "_listen"))
+	running = true
+	thread = Thread.new()
+	thread.start(Callable(self, "listen"))
 
 # Корректное завершение работы слушателя
 func stop() -> void:
-	if not _running:
+	if not running:
 		return
-	_running = false
+	running = false
 
-	if _thread and _thread.is_alive():
-		_thread.wait_to_finish()
-	_thread = null
+	if thread and thread.is_alive():
+		thread.wait_to_finish()
+	thread = null
 
-	if _udp:
-		_udp.close()
-	_udp = null
+	if udp:
+		udp.close()
+	udp = null
 
 # Внутренний цикл получения статуса сервера
-func _listen() -> void:
-	while _running:
-		while _udp and _udp.get_available_packet_count() > 0:
-			var bytes := _udp.get_packet()
+func listen() -> void:
+	while running:
+		while udp and udp.get_available_packet_count() > 0:
+			var bytes := udp.get_packet()
 			var txt := bytes.get_string_from_utf8()
 			var obj := JSON.parse_string(txt)
 			if typeof(obj) != TYPE_DICTIONARY or not obj.has("status"):

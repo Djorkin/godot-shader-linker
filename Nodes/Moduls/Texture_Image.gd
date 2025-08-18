@@ -22,26 +22,26 @@ func _init() -> void:
 	super._init()
 	module_name = "Texture Image"
 
-	_input_sockets = [
+	input_sockets = [
 		InputSocket.new("Vector", InputSocket.SocketType.VEC3, Vector3.ZERO)
 	]
 
-	_output_sockets = [
+	output_sockets = [
 		OutputSocket.new("Color", OutputSocket.SocketType.VEC4),
 		OutputSocket.new("Alpha", OutputSocket.SocketType.FLOAT)
 	]
 
-	for socket in _output_sockets:
+	for socket in output_sockets:
 		socket.set_parent_module(self)
 
 func get_include_files() -> Array[String]:
 	return [PATHS.INC["BLENDER_COORDS"], PATHS.INC["STRUCT_TEX_IMG"], PATHS.INC["TEX_IMAGE"],]
 
 func get_input_sockets() -> Array[InputSocket]:
-	return _input_sockets
+	return input_sockets
 
 func get_output_sockets() -> Array[OutputSocket]:
-	return _output_sockets
+	return output_sockets
 
 func get_uniform_definitions() -> Dictionary:
 	return {
@@ -56,14 +56,14 @@ func get_uniform_definitions() -> Dictionary:
 
 func get_code_blocks() -> Dictionary:
 	var outputs = get_output_vars()
-	var inputs = _get_input_args()
+	var inputs = get_input_args()
 
-	# Shared varyings: запрашиваем мировую нормаль один раз на шейдер
-	var sv = SharedVaryings.request(["world_normal"]) 
-	var sv_world_normal: String = sv.get("world_normal", SharedVaryings.get_var_name("world_normal"))
+	# Shared varyings: запрашиваем мировую нормаль один раз на шейдер через сессию builder
+	var sv = shared.request(["world_normal"]) 
+	var sv_world_normal: String = sv.get("world_normal", shared.get_var_name("world_normal"))
 
 	var coord_expr: String = inputs[0]
-	if _input_sockets[0].source == null:
+	if input_sockets[0].source == null:
 		coord_expr = "vec3(UV, 0.0)"
 
 	var args = {
@@ -95,12 +95,12 @@ vec4 {color} = tex_{uid};
 """
 
 	var blocks: Dictionary = {}
-	# Глобальные объявления shared varyings (добавятся один раз)
-	var sv_decls = SharedVaryings.build_global_declarations()
+	# Глобальные объявления shared varyings (добавятся один раз, Collector вставит после генерации)
+	var sv_decls = shared.build_global_declarations()
 	if sv_decls != "":
 		blocks["shared_varyings_decls"] = {"stage":"global", "code": sv_decls}
 	# Vertex-код для shared varyings (добавится один раз)
-	var sv_vertex = SharedVaryings.build_vertex_code()
+	var sv_vertex = shared.build_vertex_code()
 	if sv_vertex != "":
 		blocks["shared_varyings_vertex"] = {"stage":"vertex", "code": sv_vertex}
 

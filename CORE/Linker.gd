@@ -7,12 +7,11 @@ class_name Linker
 # Глобальная таблица совместимости типов
 const SOCKET_COMPAT = preload("res://addons/godot_shader_linker_(gsl)/Nodes/Moduls/Moduls_Base/Sokets/SocketCompatibility.gd")
 
-static func link_modules(
+func link_modules(
 	source_module: ShaderModule, 
 	socket_out_id: int,
 	target_module: ShaderModule, 
-	socket_in_id: int
-) -> void:
+	socket_in_id: int) -> void:
 	
 	var output_sockets = source_module.get_output_sockets()
 	if socket_out_id >= output_sockets.size():
@@ -38,5 +37,4 @@ static func link_modules(
 	input_socket.source = output_socket
 	
 	target_module.add_dependency(source_module)
-	target_module.update_active_sockets()
-	source_module.update_active_sockets()
+

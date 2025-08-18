@@ -9,28 +9,28 @@ func _init() -> void:
 	super._init()
 	module_name = "Bump"
 	
-	_input_sockets = [
+	input_sockets = [
 		InputSocket.new("Strength", InputSocket.SocketType.FLOAT, 1.0),
 		InputSocket.new("Distance", InputSocket.SocketType.FLOAT, 1.0),
 		InputSocket.new("Filter_width", InputSocket.SocketType.FLOAT, 0.1),
 		InputSocket.new("Height", InputSocket.SocketType.FLOAT, 1.0),
 		InputSocket.new("Normal", InputSocket.SocketType.VEC3, Vector3.ZERO),
 	]
-	_output_sockets = [
+	output_sockets = [
 		OutputSocket.new("Normal", OutputSocket.SocketType.VEC3),
 	]
 	
-	for socket in _output_sockets:
+	for socket in output_sockets:
 		socket.set_parent_module(self)
 
 func get_include_files() -> Array[String]:
 	return [PATHS.INC["BLENDER_COORDS"], PATHS.INC["BUMP"]]
 
 func get_input_sockets() -> Array[InputSocket]:
-	return _input_sockets
+	return input_sockets
 
 func get_output_sockets() -> Array[OutputSocket]:
-	return _output_sockets
+	return output_sockets
 
 func get_uniform_definitions() -> Dictionary:
 	var uniforms = {}
@@ -56,9 +56,8 @@ func get_uniform_definitions() -> Dictionary:
 	return uniforms
 
 func get_code_blocks() -> Dictionary:
-	update_active_sockets()
 	var outputs = get_output_vars()
-	var inputs  = _get_input_args()
+	var inputs  = get_input_args()
 	var idx_strength := 0
 	var idx_dist := 1
 	var idx_filter := 2
@@ -68,7 +67,7 @@ func get_code_blocks() -> Dictionary:
 	var n_expr: String
 	var blocks := {}
 	
-	if _input_sockets[idx_normal].source == null:
+	if input_sockets[idx_normal].source == null:
 		var global_decl_normal := "varying vec3 v_nrm_world_%s;" % unique_id
 		var global_decl_vert := "varying vec3 v_pos_world_%s;" % unique_id
 
@@ -137,7 +136,7 @@ vec3 {out_var} = world_to_view_normal_ctx(tmpN_{uid}, ctx_{uid});
 		"height": inputs[idx_height],
 		"normal_expr": n_expr,
 		"out_var": outputs["Normal"],
-		"invert": _get_prefixed_name("invert"),
+		"invert": get_prefixed_name("invert"),
 	})
 	
 	blocks["fragment_%s" % unique_id] = {"stage":"fragment", "code": frag_code}

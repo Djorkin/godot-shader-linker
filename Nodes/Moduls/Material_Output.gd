@@ -9,7 +9,7 @@ func _init() -> void:
 	super._init()
 	module_name = "Material Output"
 	
-	_input_sockets = [
+	input_sockets = [
 		InputSocket.new("Surface", InputSocket.SocketType.SHADER)
 	]
 
@@ -26,11 +26,11 @@ func get_uniform_definitions() -> Dictionary:
 	return uniforms
 
 func get_input_sockets() -> Array[InputSocket]: 
-	return _input_sockets
+	return input_sockets
 
 func get_code_blocks() -> Dictionary:
-	var inputs = _get_input_args()
-	var has_surface: bool = _input_sockets[0].source != null
+	var inputs = get_input_args()
+	var has_surface: bool = input_sockets[0].source != null
 	var surf_expr := ""
 	if has_surface:
 		surf_expr = inputs[0]

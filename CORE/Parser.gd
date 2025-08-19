@@ -4,8 +4,6 @@
 @tool
 class_name Parser
 
-
-const Import = preload("res://addons/godot_shader_linker_(gsl)/CORE/Importer.gd")
 const SERVER_URL := "http://127.0.0.1:5050/link"
 
 signal builder_ready(builder)
@@ -63,10 +61,10 @@ func _on_request_completed(result: int, response_code: int, headers: PackedStrin
 	data_transfer(data)
 
 func data_transfer(data: Dictionary) -> void:
-	var importer := Import.new()
-	var builder: ShaderBuilder = importer.build_chain(data)
-	if builder:
-		builder_ready.emit(builder)
+	var Importer_inst := Importer.new()
+	var Builder_inst : ShaderBuilder = Importer_inst.build_chain(data)
+	if Builder_inst:
+		builder_ready.emit(Builder_inst)
 	save_json(data) # debug only
 
 func save_json(data: Dictionary) -> void:

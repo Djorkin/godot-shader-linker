@@ -52,7 +52,6 @@ const VARS := {
 	},
 }
 
-# Запросить общий набор varying; возвращает mapping ключ->имя переменной
 func request(keys: Array) -> Dictionary:
 	var out := {}
 	for key in keys:

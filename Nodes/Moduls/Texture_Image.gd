@@ -58,10 +58,6 @@ func get_code_blocks() -> Dictionary:
 	var outputs = get_output_vars()
 	var inputs = get_input_args()
 
-	# Shared varyings: запрашиваем мировую нормаль один раз на шейдер через сессию builder
-	var sv = shared.request(["world_normal"]) 
-	var sv_world_normal: String = sv.get("world_normal", shared.get_var_name("world_normal"))
-
 	var coord_expr: String = inputs[0]
 	if input_sockets[0].source == null:
 		coord_expr = "vec3(UV, 0.0)"
@@ -72,7 +68,6 @@ func get_code_blocks() -> Dictionary:
 		"coord": coord_expr,
 		"color": outputs["Color"],
 		"alpha": outputs["Alpha"],
-		"sv_n": sv_world_normal
 	}
 
 	var frag_code := """
@@ -86,7 +81,7 @@ params_{uid}.color_space    = u_{uid}_color_space;
 params_{uid}.alpha_mode     = u_{uid}_alpha_mode;
 
 vec4 tex_{uid} = _sample_image(vec3(flip_uv({coord}.xy), {coord}.z), 
-								{sv_n},
+								vec3(0.0), // TODO: world_normal
 								u_{uid}_image_texture,
 								params_{uid});
 
@@ -95,16 +90,5 @@ vec4 {color} = tex_{uid};
 """
 
 	var blocks: Dictionary = {}
-	# Глобальные объявления shared varyings (добавятся один раз, Collector вставит после генерации)
-	var sv_decls = shared.build_global_declarations()
-	if sv_decls != "":
-		blocks["shared_varyings_decls"] = {"stage":"global", "code": sv_decls}
-	# Vertex-код для shared varyings (добавится один раз)
-	var sv_vertex = shared.build_vertex_code()
-	if sv_vertex != "":
-		blocks["shared_varyings_vertex"] = {"stage":"vertex", "code": sv_vertex}
-
 	blocks["fragment_%s" % unique_id] = {"stage":"fragment", "code": generate_code_block("fragment", frag_code, args)}
 	return blocks
-
-

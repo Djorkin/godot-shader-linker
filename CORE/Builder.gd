@@ -122,13 +122,11 @@ func build_shader() -> String:
 	if defines.size() > 0:
 		shader_code += "\n".join(defines.values()) + "\n"
 
-
 	# Блок include-директив
 	if include_blocks.size() > 0:
 		shader_code += "#define SHARED_DEFINE"
 		shader_code += "\n// INCLUDES\n"
 		shader_code += "\n".join(include_blocks) + "\n\n"
-	
 	
 	# Глобальные переменные (varying)
 	if global_blocks.size() > 0:

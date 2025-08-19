@@ -4,11 +4,6 @@
 @tool
 class_name Mapper
 
-
-var collector = Collector.new()
-
-
-
 var current_chain: Array[ShaderModule] = []
 var original_modules: Dictionary = {}
 var module_links: Dictionary = {}
@@ -29,14 +24,14 @@ func add_module(module: ShaderModule, params: Dictionary = {}) -> void:
 			else:
 				push_warning("Mapper: parameter '%s' not found in module %s" % [pname, module.module_name])
 
-	var mark = module.get_mark()
+	#var mark = module.get_mark()
 	
 	#if original_modules.has(mark):
 		#var original: ShaderModule = original_modules[mark]
 		#module_links[module.unique_id] = original.unique_id
 		#redirect_connections(module, original)
 	#else:
-	original_modules[mark] = module
+	#original_modules[mark] = module
 	current_chain.append(module)
 
 # unused
@@ -60,7 +55,7 @@ func build_final_chain() -> Array[ShaderModule]:
 	print("Final chain size: ", final_chain.size())
 	return final_chain
 
-func clear_chain() -> void:
+func clear_chain(collector : Collector) -> void:
 	current_chain.clear()
 	original_modules.clear()
 	module_links.clear()

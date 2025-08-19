@@ -2,17 +2,14 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 
 @tool
-class_name Importer
+class_name Importer 
 
+var Collector_inst : Collector = Collector.new()
+var Linker_inst : Linker = Linker.new()
+var Mapper_inst : Mapper = Mapper.new()
+var Builder_inst : ShaderBuilder = ShaderBuilder.new()
 
-
-var Collector_inst = Collector.new()
-var Linker_inst = Linker.new()
-
-var NODE_CLASSES : Dictionary = {}
-
-func _init_node_classes() -> void:
-	NODE_CLASSES = {
+var NODE_CLASSES : Dictionary = {
 		"TexCoordModule": TextureCoordModule,
 		"MappingModule": MappingModule,
 		"TexImageModule": TextureImageModule,
@@ -20,29 +17,11 @@ func _init_node_classes() -> void:
 		"BsdfPrincipledModule": PrincipledBSDFModule,
 		"OutputMaterialModule": OutputModule,
 		"NormalMapModule": NormalMapModule,
-		"NoiseTextureModule": NoiseTextureModule,
-		"MixModule": MixModule,
-	}
+		"TexNoiseModule": NoiseTextureModule,
+		"MixModule": MixModule
+}
 
-func build_chain(data: Dictionary) -> ShaderBuilder:
-	_init_node_classes()
-	if not (data.has("nodes") and data.has("links")):
-		push_error("No nodes/links fields")
-		return null
-	
-	var mapper := Mapper.new()
-	mapper.clear_chain()
-	
-	var node_table: Dictionary = instantiate_modules(data)
-	
-	add_modules_to_mapper(node_table, data, mapper)
-	link_modules(data, node_table)
-	register_in_collector(mapper)
-	
-	var builder := ShaderBuilder.new()
-	
-	Collector_inst.configure(builder)
-	return builder
+
 
 
 func instantiate_modules(data: Dictionary) -> Dictionary:
@@ -60,7 +39,7 @@ func instantiate_modules(data: Dictionary) -> Dictionary:
 	return node_table
 
 
-func add_modules_to_mapper(node_table: Dictionary, data: Dictionary, mapper: Mapper) -> void:
+func add_modules_to_mapper(node_table: Dictionary, data: Dictionary) -> void:
 	for node_dict in data["nodes"]:
 		var id = node_dict.get("id")
 		if not node_table.has(id):
@@ -72,7 +51,14 @@ func add_modules_to_mapper(node_table: Dictionary, data: Dictionary, mapper: Map
 			for p in node_dict["params"]:
 				var v = node_dict["params"][p]
 				module.set_uniform_override(p, sanitize_param_value(v))
-		mapper.add_module(module)
+		Mapper_inst.add_module(module)
+
+
+func register_in_collector() -> void:
+	var final_chain: Array[ShaderModule] = Mapper_inst.build_final_chain()
+	Collector_inst.registered_modules.clear()
+	for mod in final_chain:
+		Collector_inst.register_module(mod) 
 
 
 func link_modules(data: Dictionary, node_table: Dictionary) -> void:
@@ -84,9 +70,9 @@ func link_modules(data: Dictionary, node_table: Dictionary) -> void:
 
 		if typeof(link_item) == TYPE_DICTIONARY:
 			from_id = str(link_item.get("from_node"))
-			to_id   = str(link_item.get("to_node"))
+			to_id = str(link_item.get("to_node"))
 			from_socket = int(link_item.get("from_socket", 0))
-			to_socket   = int(link_item.get("to_socket", 0))
+			to_socket = int(link_item.get("to_socket", 0))
 		elif typeof(link_item) == TYPE_STRING:
 			var parts = link_item.split(",")
 			if parts.size() < 4:
@@ -97,19 +83,30 @@ func link_modules(data: Dictionary, node_table: Dictionary) -> void:
 			to_socket = int(parts[3])
 		else:
 			continue
-
 		var from_mod: ShaderModule = node_table.get(from_id, null)
-		var to_mod:   ShaderModule = node_table.get(to_id, null)
+		var to_mod: ShaderModule = node_table.get(to_id, null)
 		if from_mod == null or to_mod == null:
 			continue
 		Linker_inst.link_modules(from_mod, from_socket, to_mod, to_socket)
 
 
-func register_in_collector(mapper: Mapper) -> void:
-	var final_chain: Array[ShaderModule] = mapper.build_final_chain()
-	Collector_inst.registered_modules.clear()
-	for mod in final_chain:
-		Collector_inst.register_module(mod) 
+func build_chain(data: Dictionary) -> ShaderBuilder:
+	if not (data.has("nodes") and data.has("links")):
+		push_error("No nodes/links fields")
+		return
+	
+	Mapper_inst.clear_chain(Collector_inst)
+	
+	var node_table: Dictionary = instantiate_modules(data)
+	add_modules_to_mapper(node_table, data)
+	link_modules(data, node_table)
+	register_in_collector()
+	
+	Collector_inst.configure(Builder_inst)
+	return Builder_inst
+
+
+
 
 
 func sanitize_param_value(val):

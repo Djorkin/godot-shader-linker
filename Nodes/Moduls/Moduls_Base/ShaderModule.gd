@@ -17,9 +17,6 @@ var input_sockets: Array[InputSocket] = []
 var output_sockets: Array[OutputSocket] = []
 var active_output_sockets: Array[String] = []
 var uniform_overrides: Dictionary = {}
-var shared: SharedVaryings = null
-
-
 
 
 func _init() -> void:
@@ -36,9 +33,6 @@ func get_dependency() -> Array[ShaderModule]:
 
 func get_code_blocks() -> Dictionary:
 	return {}
-
-func set_shared(shared: SharedVaryings) -> void:
-	self.shared = shared
 
 func get_output_var() -> String:
 	return "output_%s" % unique_id.replace("-", "_")
@@ -113,14 +107,14 @@ func generate_uuid() -> String:
 func generate_code_block(stage: String, template: String, args: Dictionary) -> String:
 	return template.format(args).strip_edges()
 
-#unused
-func get_mark() -> String:
-	var data = ""
-	data += module_name
-	data += str(get_input_sockets().map(func(s): return s.name + s.type_name()))
-	data += str(get_output_sockets().map(func(s): return s.name + s.type_name()))
-	data += str(get_code_blocks())
-	return data.sha1_text()
+##unused
+#func get_mark() -> String:
+	#var data = ""
+	#data += module_name
+	#data += str(get_input_sockets().map(func(s): return s.name + s.type_name()))
+	#data += str(get_output_sockets().map(func(s): return s.name + s.type_name()))
+	#data += str(get_code_blocks())
+	#return data.sha1_text()
 
 func join_declarations(decls: Array) -> String:
 	var result = ""

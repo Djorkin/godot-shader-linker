@@ -28,12 +28,9 @@ func recompute_active_output_sockets():
 				module.active_output_sockets.append(socket.name)
 
 func configure(builder: ShaderBuilder, shader_type : String = "spatial") -> void:
-	builder.reset()
+	#builder.reset()
 	builder.shader_type(shader_type)
 
-	# Локальная сессия shared для этой сборки
-	var shared := SharedVaryings.new()
-	shared.reset()
 	
 	var all_includes = []
 	for module in registered_modules.values():
@@ -45,24 +42,13 @@ func configure(builder: ShaderBuilder, shader_type : String = "spatial") -> void
 		if not unique_includes.has(abs_path):
 			unique_includes[abs_path] = include
 			builder.add_include(include)
-	
+
 	var processed = {}
 	var execution_order = topological_sort()
 	recompute_active_output_sockets()
 	for module in execution_order:
 		if not processed.has(module.unique_id):
-			if module.has_method("set_shared"):
-				module.set_shared(shared)
 			apply_module(builder, module, processed)
-
-	# Добавляем общий блок объявлений shared varyings и единый vertex-код один раз
-	var sv_decls = shared.build_global_declarations()
-	if sv_decls != "":
-		builder.add_code(sv_decls, "shared_varyings_decls", "global")
-	var sv_vertex = shared.build_vertex_code()
-	if sv_vertex != "":
-		builder.add_code(sv_vertex, "shared_varyings_vertex", "vertex")
-	
 
 
 func topological_sort() -> Array:

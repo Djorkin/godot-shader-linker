@@ -90,6 +90,8 @@ func apply_module(builder: ShaderBuilder, module, processed: Dictionary) -> void
 	var inputs = module.get_uniform_definitions()
 	for input_name in inputs:
 		var input_def = inputs[input_name]
+		if typeof(input_def) == TYPE_ARRAY:
+			input_def = ShaderSpec.decode_uniform_spec(input_def)
 		var unique_name = "u_%s_%s" % [module.unique_id.replace("-", "_"), input_name]
 		var def_val = input_def.get("default", null)
 		
@@ -103,17 +105,15 @@ func apply_module(builder: ShaderBuilder, module, processed: Dictionary) -> void
 			input_def["type"],
 			unique_name,
 			def_val,
-			input_def.get("hint", "")
+			input_def.get("hint", null),
+			input_def.get("hint_params", null)
 		)
 	
 	for block_name in module.get_code_blocks():
 		var block = module.get_code_blocks()[block_name]
-		builder.add_code(block["code"], block_name, block["stage"])
+		builder.add_code(block["code"], block["stage"])
 	
 	for mode in module.get_render_modes():
 		builder.add_render_mode(mode)
 	
 	processed[module.unique_id] = true
-
-func prefix_code(code: String, module: ShaderModule) -> String:
-	return code

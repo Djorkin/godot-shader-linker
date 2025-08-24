@@ -91,22 +91,6 @@ func save_material_file(path: String) -> void:
 	EditorInterface.get_resource_filesystem().scan()
 	pending_updates.clear()
 	
-	#for mod_id in collector.registered_modules:
-		#var module = collector.registered_modules[mod_id]
-		#for override_key in module.uniform_overrides:
-			#var value = module.uniform_overrides[override_key]
-			#if override_key == "image_path":
-				#var uniform_name = module.get_prefixed_name("image_texture")
-				#if typeof(value) == TYPE_STRING:
-					#pending_updates.append({
-						#"mat_path": path,
-						#"uniform": uniform_name,
-						#"tex_path": value
-					#})
-			#else:
-				#var uniform_name = module.get_prefixed_name(override_key)
-				#material.set_shader_parameter(uniform_name, value)
-	
 	# если есть незагруженные текстуры – запустим таймер повторных попыток
 	if pending_updates.size() > 0:
 		start_retry_timer()

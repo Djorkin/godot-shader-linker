@@ -64,20 +64,13 @@ func get_include_files() -> Array[String]:
         PATHS.INC["NOISE_TEXTURE"],
     ]
 
-func get_input_sockets() -> Array[InputSocket]:
-    return input_sockets
-
-func get_output_sockets() -> Array[OutputSocket]:
-    return output_sockets
 
 func get_uniform_definitions() -> Dictionary:
     var u: Dictionary = {}
-    
-    u["dimensions"] = {"type": "int", "default": dimensions, "hint": "hint_enum(\"1D\", \"2D\", \"3D\", \"4D\")"}
-    u["fractal_type"] = {"type": "int", "default": fractal_type, "hint": "hint_enum(\"Multifractal\", \"Ridged Multifractal\", \"Hybrid Multifractal\", \"fBm\", \"Hetero Terrain\")"}
-    u["normalize"] = {"type": "bool", "default": normalize}
 
-
+    u["dimensions"] = [ShaderSpec.ShaderType.INT, dimensions, ShaderSpec.UniformHint.ENUM, ["1D", "2D", "3D", "4D"]]
+    u["fractal_type"] = [ShaderSpec.ShaderType.INT, fractal_type, ShaderSpec.UniformHint.ENUM, ["Multifractal", "Ridged Multifractal", "Hybrid Multifractal", "fBm", "Hetero Terrain"]]
+    u["normalize"] = [ShaderSpec.ShaderType.BOOL, normalize]
 
     for s in get_input_sockets():
         if s.source:

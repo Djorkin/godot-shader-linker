@@ -43,27 +43,19 @@ func _init() -> void:
 func get_include_files() -> Array[String]:
 	return [PATHS.INC["NORMAL_MAP"]]
 
-func get_input_sockets() -> Array[InputSocket]:
-	return input_sockets
-
-func get_output_sockets() -> Array[OutputSocket]:
-	return output_sockets
-
 func get_uniform_definitions() -> Dictionary:
-	var uniforms = {}
+	var u = {}
 
-	uniforms["normal_map_type"] = {"type": "int", "default": normal_map_type, "hint": "hint_enum(\"Tangent Space\", \"Object Space\", \"World Space\", \"Blender Object Space\", \"Blender World Space\")"}
+	u["normal_map_type"] = [ShaderSpec.ShaderType.INT, normal_map_type, ShaderSpec.UniformHint.ENUM, ["Tangent Space","Object Space","World Space","Blender Object Space","Blender World Space"]]
 	for s in get_input_sockets():
 		if s.source:
 			continue
-		var u = s.to_uniform()
-		match s.name:
-			"Strength":
-				u["hint"] = "hint_range(0,10)"
-			_:
-				pass
-		uniforms[s.name.to_lower()] = u
-	return uniforms
+		var key = s.name.to_lower()
+		if s.name == "Strength":
+			u[key] = [ShaderSpec.ShaderType.FLOAT, s.default, ShaderSpec.UniformHint.RANGE, {"min":0, "max":10, "step":0.01}]
+		else:
+			u[key] = s.to_uniform()
+	return u
 
 func get_code_blocks() -> Dictionary:
 	var outputs := get_output_vars()

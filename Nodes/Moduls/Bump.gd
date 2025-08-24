@@ -26,34 +26,39 @@ func _init() -> void:
 func get_include_files() -> Array[String]:
 	return [PATHS.INC["BLENDER_COORDS"], PATHS.INC["BUMP"]]
 
-func get_input_sockets() -> Array[InputSocket]:
-	return input_sockets
-
-func get_output_sockets() -> Array[OutputSocket]:
-	return output_sockets
-
 func get_uniform_definitions() -> Dictionary:
-	var uniforms = {}
+	var u = {}
 
 	# Флаг инверсии (чекбокс)
-	uniforms["invert"] = {"type": "bool", "default": false}
+	u["invert"] = [ShaderSpec.ShaderType.BOOL, false]
 
-	# Параметры из input-сокетов с хинтами
 	for s in get_input_sockets():
 		if s.source:
 			continue
-		var u = s.to_uniform()
+		var t
+		match s.type:
+			InputSocket.SocketType.FLOAT:
+				t = ShaderSpec.ShaderType.FLOAT
+			InputSocket.SocketType.VEC3:
+				t = ShaderSpec.ShaderType.VEC3
+			InputSocket.SocketType.VEC4:
+				t = ShaderSpec.ShaderType.VEC4
+			_:
+				t = ShaderSpec.ShaderType.FLOAT
+
+		var key = s.name.to_lower()
+		var spec = [t, s.default]
 		match s.name:
 			"Strength":
-				u["hint"] = "hint_range(0,1)"
+				spec = [ShaderSpec.ShaderType.FLOAT, s.default, ShaderSpec.UniformHint.RANGE, {"min":0, "max":1, "step":0.01}]
 			"Distance":
-				u["hint"] = "hint_range(0,1000)"
+				spec = [ShaderSpec.ShaderType.FLOAT, s.default, ShaderSpec.UniformHint.RANGE, {"min":0, "max":1000, "step":0.1}]
 			"Filter_width":
-				u["hint"] = "hint_range(0,10)"
+				spec = [ShaderSpec.ShaderType.FLOAT, s.default, ShaderSpec.UniformHint.RANGE, {"min":0, "max":10, "step":0.01}]
 			_:
 				pass
-		uniforms[s.name.to_lower()] = u
-	return uniforms
+		u[key] = spec
+	return u
 
 func get_code_blocks() -> Dictionary:
 	var outputs = get_output_vars()

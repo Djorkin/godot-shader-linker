@@ -88,45 +88,27 @@ func get_include_files() -> Array[String]:
         return [PATHS.INC["MIX_FUNCTIONS"]]
 
 
-func get_input_sockets() -> Array[InputSocket]:
-    return input_sockets
-
-func get_output_sockets() -> Array[OutputSocket]:
-    return output_sockets
-
 func get_uniform_definitions() -> Dictionary:
     var u := {}
-    # Униформа, описывающая тип данных, обрабатываемых модулем
-    u["mix_data_type"] = {
-        "type": "int",
-        "default": mix_data_type,
-        "hint": "hint_enum(\"Float\", \"Vector\", \"Color\")"
-    }
+    # Тип данных модуля
+    u["mix_data_type"] = [ShaderSpec.ShaderType.INT, mix_data_type, ShaderSpec.UniformHint.ENUM, ["Float","Vector","Color"]]
 
     match mix_data_type:
         DataType.COLOR_TYPE:
             # Основные параметры смешивания цвета
-            u["mix_blend_type"] = {
-                "type": "int",
-                "default": mix_blend_type,
-                "hint": "hint_enum(\"Mix\", \"Darken\", \"Multiply\", \"Color Burn\", \"Lighten\", \"Screen\", \"Color Dodge\", \"Add\", \"Overlay\", \"Soft Light\", \"Linear Light\", \"Difference\", \"Exclusion\", \"Subtract\", \"Divide\", \"Hue\", \"Saturation\", \"Color\", \"Value\")"
-            }
-            u["clamp_result"] = {"type": "bool", "default": clamp_result}
-            u["clamp_factor"] = {"type": "bool", "default": clamp_factor}
+            u["mix_blend_type"] = [ShaderSpec.ShaderType.INT, mix_blend_type, ShaderSpec.UniformHint.ENUM, ["Mix","Darken","Multiply","Color Burn","Lighten","Screen","Color Dodge","Add","Overlay","Soft Light","Linear Light","Difference","Exclusion","Subtract","Divide","Hue","Saturation","Color","Value"]]
+            u["clamp_result"] = [ShaderSpec.ShaderType.BOOL, clamp_result]
+            u["clamp_factor"] = [ShaderSpec.ShaderType.BOOL, clamp_factor]
 
         
         DataType.VECTOR_TYPE:
             # Параметры смешивания векторных значений
-            u["vector_factor_mode"] = {
-                "type": "int",
-                "default": vector_factor_mode,
-                "hint": "hint_enum(\"Uniform\", \"Non-Uniform\")"
-            }
-            u["clamp_factor"] = {"type": "bool", "default": clamp_factor}
+            u["vector_factor_mode"] = [ShaderSpec.ShaderType.INT, vector_factor_mode, ShaderSpec.UniformHint.ENUM, ["Uniform","Non-Uniform"]]
+            u["clamp_factor"] = [ShaderSpec.ShaderType.BOOL, clamp_factor]
 
         _:
             # FLOAT_TYPE по умолчанию
-            u["clamp_factor"] = {"type": "bool", "default": clamp_factor}
+            u["clamp_factor"] = [ShaderSpec.ShaderType.BOOL, clamp_factor]
 
     # Добавляем uniform'ы для не подключённых входных сокетов
     for s in get_input_sockets():
@@ -135,9 +117,10 @@ func get_uniform_definitions() -> Dictionary:
         var def = s.to_uniform()
         match s.name:
             "Factor", "mix_factor":
-                def["hint"] = "hint_range(0,1)"
+                def["hint"] = ShaderSpec.UniformHint.RANGE
+                def["hint_params"] = {"min":0, "max":1}
             "A_Color", "B_Color":
-                def["hint"] = "source_color"
+                def["hint"] = ShaderSpec.UniformHint.SOURCE_COLOR
             _:
                 pass
         u[s.name.to_lower()] = def

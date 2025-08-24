@@ -45,7 +45,6 @@ func add_modules_to_mapper(node_table: Dictionary, data: Dictionary) -> void:
 		if not node_table.has(id):
 			continue
 		var module: ShaderModule = node_table[id]
-		
 		# Передача параметров
 		if node_dict.has("params") and typeof(node_dict["params"]) == TYPE_DICTIONARY:
 			for p in node_dict["params"]:

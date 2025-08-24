@@ -8,7 +8,8 @@ var Parser_inst = Parser.new()
 var SSL = ServerStatusListener.new()
 var Saver_inst = ShaderSaver.new()
 
-var save_mode: String   # "shader" || "material"
+enum SaveMode { NONE, SHADER, MATERIAL }
+var save_mode: int = SaveMode.NONE
 
 func _ready() -> void:
 	add_child(Saver_inst)
@@ -19,16 +20,16 @@ func _exit_tree() -> void:
 	SSL.stop()
 
 func _on_create_shader_pressed() -> void:
-	save_mode = "shader"
+	save_mode = SaveMode.SHADER
 	Parser_inst.send_request()
 
 func _on_create_material_pressed() -> void:
-	save_mode = "material"
+	save_mode = SaveMode.MATERIAL
 	Parser_inst.send_request()
 
 func builder_ready(builder: ShaderBuilder) -> void:
-	if save_mode == "shader":
+	if save_mode == SaveMode.SHADER:
 		Saver_inst.save_shader(builder)
-	elif save_mode == "material":
+	elif save_mode == SaveMode.MATERIAL:
 		Saver_inst.save_material(builder)
-	save_mode = ""
+	save_mode = SaveMode.NONE

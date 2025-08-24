@@ -8,9 +8,19 @@ const SERVER_URL := "http://127.0.0.1:5050/link"
 
 signal builder_ready(builder)
 
+
+func data_transfer(data: Dictionary) -> void:
+	var Importer_inst := Importer.new()
+	var Builder_inst : ShaderBuilder = Importer_inst.build_chain(data)
+	if Builder_inst:
+		builder_ready.emit(Builder_inst)
+	save_json(data) # debug only
+
+
 func send_request() -> void:
 	var http := HTTPRequest.new()
 	var tree := Engine.get_main_loop()
+
 	if tree and tree is SceneTree:
 		tree.root.add_child(http)
 	else:
@@ -22,6 +32,7 @@ func send_request() -> void:
 	var err := http.request(SERVER_URL)
 	if err != OK:
 		push_error("Failed to send request (%s)" % err)
+
 
 func _on_request_completed(result: int, response_code: int, headers: PackedStringArray, body: PackedByteArray, http: HTTPRequest) -> void:
 	if is_instance_valid(http):
@@ -60,12 +71,6 @@ func _on_request_completed(result: int, response_code: int, headers: PackedStrin
 	
 	data_transfer(data)
 
-func data_transfer(data: Dictionary) -> void:
-	var Importer_inst := Importer.new()
-	var Builder_inst : ShaderBuilder = Importer_inst.build_chain(data)
-	if Builder_inst:
-		builder_ready.emit(Builder_inst)
-	save_json(data) # debug only
 
 func save_json(data: Dictionary) -> void:
 	var dir_path := "user://gsl_logs"

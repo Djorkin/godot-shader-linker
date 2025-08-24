@@ -53,8 +53,6 @@ func _init() -> void:
 func get_include_files() -> Array[String]:
 	return [PATHS.INC["PHYSICAL"], PATHS.INC["MATH"], PATHS.INC["MATERIAL"], PATHS.INC["BSDF_PRINCILED"]]
 
-func get_output_sockets() -> Array[OutputSocket]:
-	return output_sockets
 
 func get_uniform_definitions() -> Dictionary:
 	var u = {}
@@ -63,24 +61,29 @@ func get_uniform_definitions() -> Dictionary:
 			continue
 		var name = s.name.to_lower()
 		if name == "screen_texture":
-			u["SCREEN_TEXTURE"] = {"type":"sampler2D", "hint":"hint_screen_texture"}
+			u["SCREEN_TEXTURE"] = [ShaderSpec.ShaderType.SAMPLER2D, null, ShaderSpec.UniformHint.SCREEN_TEXTURE]
 			continue
 		var def = s.to_uniform()
 
 		# Добавляем подсказки (hint) в зависимости от типа параметра
 		match s.name:
 			"Base_Color", "Specular_Tint", "Coat_Tint", "Sheen_Tint", "Emission":
-				def["hint"] = "source_color"
+				def["hint"] = ShaderSpec.UniformHint.SOURCE_COLOR
 			"Metallic", "Roughness", "Alpha", "Transmission_Weight", "Coat_Weight", "Coat_Roughness", "Sheen_Weight", "Sheen_Roughness", "IOR_Level":
-				def["hint"] = "hint_range(0,1)"
+				def["hint"] = ShaderSpec.UniformHint.RANGE
+				def["hint_params"] = {"min":0, "max":1}
 			"IOR":
-				def["hint"] = "hint_range(1.0,100.0)"
+				def["hint"] = ShaderSpec.UniformHint.RANGE
+				def["hint_params"] = {"min":1.0, "max":100.0}
 			"Coat_IOR":
-				def["hint"] = "hint_range(1.0,4.0)"
+				def["hint"] = ShaderSpec.UniformHint.RANGE
+				def["hint_params"] = {"min":1.0, "max":4.0}
 			"Emission_Strength":
-				def["hint"] = "hint_range(0,100)"
+				def["hint"] = ShaderSpec.UniformHint.RANGE
+				def["hint_params"] = {"min":0, "max":100}
 			"Specular_IOR_Level":
-				def["hint"] = "hint_range(0,1)"
+				def["hint"] = ShaderSpec.UniformHint.RANGE
+				def["hint_params"] = {"min":0, "max":1}
 			_:
 				pass
 

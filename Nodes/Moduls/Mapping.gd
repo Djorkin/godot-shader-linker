@@ -32,11 +32,7 @@ func get_include_files() -> Array[String]:
 
 func get_uniform_definitions() -> Dictionary:
 	var uniforms = {}
-	uniforms["mapping_type"] = {
-		"type": "int",
-		"default": mapping_type,
-		"hint": "hint_enum(\"Point\", \"Texture\", \"Vector\", \"Normal\")"
-	}
+	uniforms["mapping_type"] = [ShaderSpec.ShaderType.INT, mapping_type, ShaderSpec.UniformHint.ENUM, ["Point","Texture","Vector","Normal"]]
 	
 	for socket in get_input_sockets():
 		if socket.name == "Type":
@@ -45,11 +41,6 @@ func get_uniform_definitions() -> Dictionary:
 			uniforms[socket.name.to_lower()] = socket.to_uniform()
 	return uniforms
 
-func get_input_sockets() -> Array[InputSocket]: 
-	return input_sockets
-
-func get_output_sockets() -> Array[OutputSocket]:
-	return output_sockets
 
 func get_code_blocks() -> Dictionary:
 	var active: Array[String] = get_active_output_sockets()

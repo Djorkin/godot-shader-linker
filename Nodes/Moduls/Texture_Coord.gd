@@ -25,9 +25,6 @@ func _init() -> void:
 func get_include_files() -> Array[String]:
 	return [PATHS.INC["BLENDER_COORDS"], PATHS.INC["TEX_COORD"]]
 
-func get_output_sockets() -> Array[OutputSocket]:
-	return output_sockets
-
 func get_code_blocks() -> Dictionary:
 	var outputs = get_output_vars()
 	var active: Array[String] = get_active_output_sockets()
@@ -118,20 +115,20 @@ func get_code_blocks() -> Dictionary:
 	if globals.size() > 0:
 		var g_key = "global_texcoord_%s" % str(join_declarations(globals).hash())
 		blocks[g_key] = {
-			"stage": "global",
+			"stage": Stage.GLOBAL,
 			"code": join_declarations(globals)
 		}
 	
 	if !vertex_code.is_empty():
 		var v_key = "vertex_texcoord_%s" % str(vertex_code.hash())
 		blocks[v_key] = {
-			"stage": "vertex",
+			"stage": Stage.VERTEX,
 			"code": vertex_code
 		}
 	
 	if !fragment_code.is_empty():
 		blocks["fragment_%s" % unique_id] = {
-			"stage": "fragment",
+			"stage": Stage.FRAGMENT,
 			"code": fragment_code
 		}
 	

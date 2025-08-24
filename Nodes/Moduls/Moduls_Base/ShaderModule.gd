@@ -11,6 +11,7 @@ const SOCKET_COMPAT = preload("res://addons/godot_shader_linker_(gsl)/Nodes/Modu
 @export_category("Module Settings")
 @export var module_name: String = "Unnamed"
 
+
 var unique_id: String
 var dependencies: Array[ShaderModule] = []
 var input_sockets: Array[InputSocket] = []
@@ -38,10 +39,10 @@ func get_output_var() -> String:
 	return "output_%s" % unique_id.replace("-", "_")
 
 func get_input_sockets() -> Array[InputSocket]:
-	return []
+	return input_sockets
 
 func get_output_sockets() -> Array[OutputSocket]:
-	return []
+	return output_sockets
 
 func get_render_modes() -> Array[String]:
 	return []

@@ -25,9 +25,6 @@ func get_uniform_definitions() -> Dictionary:
 			uniforms[socket.name.to_lower()] = socket.to_uniform()
 	return uniforms
 
-func get_input_sockets() -> Array[InputSocket]: 
-	return input_sockets
-
 func get_code_blocks() -> Dictionary:
 	var inputs = get_input_args()
 	var has_surface: bool = input_sockets[0].source != null
@@ -81,7 +78,7 @@ CLEARCOAT_ROUGHNESS = mat_{uid}.coat_roughness;
 """.format({"module": module_name, "uid": uid})
 
 	return {
-		"fragment_%s" % uid : {"stage":"fragment", "code": code}
+		"fragment_%s" % uid : {"stage": Stage.FRAGMENT, "code": code}
 	}
 
 func get_render_modes() -> Array[String]:

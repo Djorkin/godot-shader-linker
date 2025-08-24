@@ -34,16 +34,16 @@ func add_module(module: ShaderModule, params: Dictionary = {}) -> void:
 	#original_modules[mark] = module
 	current_chain.append(module)
 
-# unused
-func redirect_connections(duplicate: ShaderModule, original: ShaderModule) -> void:
-	for mod in current_chain:
-		for input_socket in mod.get_input_sockets():
-			if input_socket.source and input_socket.source.parent_module == duplicate:
-				var sockets = original.get_output_sockets()
-				if input_socket.source.get_index() < sockets.size():
-					input_socket.source = sockets[input_socket.source.get_index()]
-					mod.dependencies.erase(duplicate)
-					mod.dependencies.append(original)
+## unused
+#func redirect_connections(duplicate: ShaderModule, original: ShaderModule) -> void:
+	#for mod in current_chain:
+		#for input_socket in mod.get_input_sockets():
+			#if input_socket.source and input_socket.source.parent_module == duplicate:
+				#var sockets = original.get_output_sockets()
+				#if input_socket.source.get_index() < sockets.size():
+					#input_socket.source = sockets[input_socket.source.get_index()]
+					#mod.dependencies.erase(duplicate)
+					#mod.dependencies.append(original)
 
 
 func build_final_chain() -> Array[ShaderModule]:

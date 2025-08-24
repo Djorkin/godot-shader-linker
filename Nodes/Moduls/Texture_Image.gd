@@ -37,21 +37,15 @@ func _init() -> void:
 func get_include_files() -> Array[String]:
 	return [PATHS.INC["BLENDER_COORDS"], PATHS.INC["STRUCT_TEX_IMG"], PATHS.INC["TEX_IMAGE"],]
 
-func get_input_sockets() -> Array[InputSocket]:
-	return input_sockets
-
-func get_output_sockets() -> Array[OutputSocket]:
-	return output_sockets
-
 func get_uniform_definitions() -> Dictionary:
 	return {
-		"image_texture": {"type":"sampler2D"},
-		"interpolation": {"type":"int", "default":interpolation, "hint":"hint_enum(\"Linear\",\"Closest\",\"Cubic\")"},
-		"projection": {"type":"int", "default":projection, "hint":"hint_enum(\"Flat\",\"Box\",\"Sphere\",\"Tube\")"},
-		"box_blend": {"type":"float", "default":box_blend, "hint":"hint_range(0,1,0.01)"},
-		"extension": {"type":"int", "default":extension, "hint":"hint_enum(\"Repeat\",\"Extend\",\"Clip\",\"Mirror\")"},
-		"color_space": {"type":"int", "default":color_space, "hint":"hint_enum(\"sRGB\",\"Non-Color\")"},
-		"alpha_mode": {"type":"int", "default":alpha_mode, "hint":"hint_enum(\"Straight\",\"Premultiplied\",\"ChannelPacked\",\"None\")"},
+		"image_texture": [ShaderSpec.ShaderType.SAMPLER2D, null],
+		"interpolation": [ShaderSpec.ShaderType.INT, interpolation, ShaderSpec.UniformHint.ENUM, ["Linear","Closest","Cubic"]],
+		"projection": [ShaderSpec.ShaderType.INT, projection, ShaderSpec.UniformHint.ENUM, ["Flat","Box","Sphere","Tube"]],
+		"box_blend": [ShaderSpec.ShaderType.FLOAT, box_blend, ShaderSpec.UniformHint.RANGE, {"min":0, "max":1, "step":0.01}],
+		"extension": [ShaderSpec.ShaderType.INT, extension, ShaderSpec.UniformHint.ENUM, ["Repeat","Extend","Clip","Mirror"]],
+		"color_space": [ShaderSpec.ShaderType.INT, color_space, ShaderSpec.UniformHint.ENUM, ["sRGB","Non-Color"]],
+		"alpha_mode": [ShaderSpec.ShaderType.INT, alpha_mode, ShaderSpec.UniformHint.ENUM, ["Straight","Premultiplied","ChannelPacked","None"]],
 	}
 
 func get_code_blocks() -> Dictionary:

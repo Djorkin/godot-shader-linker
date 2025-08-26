@@ -35,9 +35,6 @@ func get_dependency() -> Array[ShaderModule]:
 func get_code_blocks() -> Dictionary:
 	return {}
 
-func get_output_var() -> String:
-	return "output_%s" % unique_id.replace("-", "_")
-
 func get_input_sockets() -> Array[InputSocket]:
 	return input_sockets
 
@@ -57,15 +54,6 @@ func get_output_vars() -> Dictionary:
 		outputs[socket.name] = "output_%s_%s" % [unique_id.replace("-", "_"), socket.name.to_lower()]
 	return outputs
 
-func get_output_declarations() -> String:
-	var declarations: Array[String] = []
-	for socket in get_output_sockets():
-		var decl = socket.declaration(get_output_vars()[socket.name])
-		if not decl.ends_with(";"):
-			decl += ";"
-		declarations.append(decl)
-	return "\n".join(declarations)
-
 func get_prefixed_name(param: String) -> String:
 	return "u_%s_%s" % [unique_id.replace("-", "_"), param]
 
@@ -83,13 +71,6 @@ func get_input_args() -> Array:
 		args.append(expr)
 	return args
 
-func get_global_declarations(declarations : String = "") -> String:
-	for socket in output_sockets:
-		var decl = socket.declaration(get_output_vars()[socket.name])
-		if not decl.ends_with(";"): decl += ";"
-		declarations += "varying %s\n" % decl
-	return declarations
-
 func get_uniform_override(name: String):
 	return uniform_overrides.get(name, null)
 
@@ -105,6 +86,11 @@ func generate_uuid() -> String:
 	rng.randomize()
 	return "%08x" % rng.randi()
 
+func get_required_shared_varyings() -> Array[int]:
+	return []
+
+
+# TODO: delete
 func generate_code_block(stage: String, template: String, args: Dictionary) -> String:
 	return template.format(args).strip_edges()
 
@@ -117,6 +103,7 @@ func generate_code_block(stage: String, template: String, args: Dictionary) -> S
 	#data += str(get_code_blocks())
 	#return data.sha1_text()
 
+# TODO: delete
 func join_declarations(decls: Array) -> String:
 	var result = ""
 	for decl in decls:

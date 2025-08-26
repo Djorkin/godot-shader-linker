@@ -41,10 +41,10 @@ var mix_blend_type : int = BlendType.MIX
 func _init() -> void:
     super._init()
     module_name = "Mix"
-    _configure_input_sockets()
+    configure_input_sockets()
 
-# configure input sockets depending on data type
-func _configure_input_sockets() -> void:
+
+func configure_input_sockets() -> void:
     match mix_data_type:
         DataType.COLOR_TYPE:
             input_sockets = [
@@ -270,12 +270,12 @@ func set_uniform_override(name: String, value) -> void:
         var new_type := int(value)
         if new_type != mix_data_type:
             mix_data_type = new_type
-            _configure_input_sockets()
+            configure_input_sockets()
     elif name == "vector_factor_mode":
         var new_vec_mode := int(value)
         if new_vec_mode != vector_factor_mode:
             vector_factor_mode = new_vec_mode
-            _configure_input_sockets()
+            configure_input_sockets()
 
     super.set_uniform_override(name, value)
 

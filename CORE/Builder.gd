@@ -8,7 +8,6 @@ var uniforms := []
 var vertex_blocks := {}
 var fragment_blocks := {}
 var added_uniforms := {}
-var added_functions := {}
 var added_includes := {}
 var include_blocks := [] 
 var added_function_hashes := {}  
@@ -16,14 +15,13 @@ var function_blocks := []
 var global_blocks := []
 var defines := {} 
 
-# неиспользуется из-за инстанцирования нового билдера для каждого модуля
+# неиспользуется из-за инстанцирования нового билдера для каждого пайплайна
 func reset() -> void:
 	_shader_type = "spatial"
 	uniforms.clear()
 	vertex_blocks.clear()
 	fragment_blocks.clear()
 	added_uniforms.clear()
-	added_functions.clear()
 	added_includes.clear()
 	include_blocks.clear()
 	function_blocks.clear() 

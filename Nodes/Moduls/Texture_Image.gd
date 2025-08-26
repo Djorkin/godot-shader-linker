@@ -37,6 +37,9 @@ func _init() -> void:
 func get_include_files() -> Array[String]:
 	return [PATHS.INC["BLENDER_COORDS"], PATHS.INC["STRUCT_TEX_IMG"], PATHS.INC["TEX_IMAGE"],]
 
+func get_required_shared_varyings() -> Array[int]:
+	return [ShaderSpec.SharedVar.WORLD_NORMAL]
+
 func get_uniform_definitions() -> Dictionary:
 	return {
 		"image_texture": [ShaderSpec.ShaderType.SAMPLER2D, null],
@@ -62,6 +65,7 @@ func get_code_blocks() -> Dictionary:
 		"coord": coord_expr,
 		"color": outputs["Color"],
 		"alpha": outputs["Alpha"],
+		"world_normal": ShaderSpec.shared_var_name(ShaderSpec.SharedVar.WORLD_NORMAL),
 	}
 
 	var frag_code := """
@@ -75,7 +79,7 @@ params_{uid}.color_space    = u_{uid}_color_space;
 params_{uid}.alpha_mode     = u_{uid}_alpha_mode;
 
 vec4 tex_{uid} = _sample_image(vec3(flip_uv({coord}.xy), {coord}.z), 
-								vec3(0.0), // TODO: world_normal
+								{world_normal},
 								u_{uid}_image_texture,
 								params_{uid});
 
@@ -83,6 +87,6 @@ vec4 {color} = tex_{uid};
 
 """
 
-	var blocks: Dictionary = {}
-	blocks["fragment_%s" % unique_id] = {"stage":"fragment", "code": generate_code_block("fragment", frag_code, args)}
-	return blocks
+	return {
+		"fragment_%s" % unique_id : {"stage":"fragment", "code": generate_code_block("fragment", frag_code, args)}
+	}

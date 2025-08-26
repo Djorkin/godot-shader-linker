@@ -115,20 +115,20 @@ func get_code_blocks() -> Dictionary:
 	if globals.size() > 0:
 		var g_key = "global_texcoord_%s" % str(join_declarations(globals).hash())
 		blocks[g_key] = {
-			"stage": Stage.GLOBAL,
+			"stage": "global",
 			"code": join_declarations(globals)
 		}
 	
 	if !vertex_code.is_empty():
 		var v_key = "vertex_texcoord_%s" % str(vertex_code.hash())
 		blocks[v_key] = {
-			"stage": Stage.VERTEX,
+			"stage": "vertex",
 			"code": vertex_code
 		}
 	
 	if !fragment_code.is_empty():
 		blocks["fragment_%s" % unique_id] = {
-			"stage": Stage.FRAGMENT,
+			"stage": "fragment",
 			"code": fragment_code
 		}
 	

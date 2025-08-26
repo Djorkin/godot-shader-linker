@@ -78,7 +78,7 @@ CLEARCOAT_ROUGHNESS = mat_{uid}.coat_roughness;
 """.format({"module": module_name, "uid": uid})
 
 	return {
-		"fragment_%s" % uid : {"stage": Stage.FRAGMENT, "code": code}
+		"fragment_%s" % uid : {"stage": "fragment", "code": code}
 	}
 
 func get_render_modes() -> Array[String]:

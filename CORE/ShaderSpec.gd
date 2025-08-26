@@ -6,6 +6,7 @@ class_name ShaderSpec
 enum ShaderType { INT, FLOAT, BOOL, VEC3, VEC4, SAMPLER2D }
 enum UniformHint { NONE, RANGE, ENUM, SOURCE_COLOR, SCREEN_TEXTURE, CUSTOM }
 enum Stage { GLOBAL, FUNCTIONS, VERTEX, FRAGMENT }
+enum SharedVar { WORLD_POS, WORLD_NORMAL, VIEW_POS, VIEW_NORMAL, WORLD_UV }
 
 static func format_uniform_hint(hint, hint_params) -> String:
 	if typeof(hint) == TYPE_STRING:
@@ -143,5 +144,20 @@ static func stage_function_name(stage_enum: int) -> String:
 	if stage_enum == Stage.FRAGMENT:
 		return "fragment"
 	return "fragment"
+
+static func shared_var_name(var_enum: int) -> String:
+	match var_enum:
+		SharedVar.WORLD_POS:
+			return "sv_world_pos"
+		SharedVar.WORLD_NORMAL:
+			return "sv_world_normal"
+		SharedVar.VIEW_POS:
+			return "sv_view_pos"
+		SharedVar.VIEW_NORMAL:
+			return "sv_view_normal"
+		SharedVar.WORLD_UV:
+			return "sv_world_uv"
+		_:
+			return ""
 
 

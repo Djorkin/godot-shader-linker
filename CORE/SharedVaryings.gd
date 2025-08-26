@@ -19,35 +19,35 @@ func reset() -> void:
 	ctxInjected = false
 
 
-const VARS := {
-	"world_pos": {
+var VARS := {
+	ShaderSpec.SharedVar.WORLD_POS: {
 		"type": "vec3",
-		"name": "sv_world_pos",
-		"v_assign": "sv_world_pos = obj_to_world_pos_ctx(VERTEX, svCtx);",
+		"name": ShaderSpec.shared_var_name(ShaderSpec.SharedVar.WORLD_POS),
+		"v_assign": "%s = obj_to_world_pos_ctx(VERTEX, svCtx);" % ShaderSpec.shared_var_name(ShaderSpec.SharedVar.WORLD_POS),
 		"needs_ctx": true,
 	},
-	"world_normal": {
+	ShaderSpec.SharedVar.WORLD_NORMAL: {
 		"type": "vec3",
-		"name": "sv_world_normal",
-		"v_assign": "sv_world_normal = obj_to_world_normal_ctx(NORMAL, svCtx);",
+		"name": ShaderSpec.shared_var_name(ShaderSpec.SharedVar.WORLD_NORMAL),
+		"v_assign": "%s = obj_to_world_normal_ctx(NORMAL, svCtx);" % ShaderSpec.shared_var_name(ShaderSpec.SharedVar.WORLD_NORMAL),
 		"needs_ctx": true,
 	},
-	"view_pos": {
+	ShaderSpec.SharedVar.VIEW_POS: {
 		"type": "vec3",
-		"name": "sv_view_pos",
-		"v_assign": "sv_view_pos = obj_to_view_pos_ctx(VERTEX, svCtx);",
+		"name": ShaderSpec.shared_var_name(ShaderSpec.SharedVar.VIEW_POS),
+		"v_assign": "%s = obj_to_view_pos_ctx(VERTEX, svCtx);" % ShaderSpec.shared_var_name(ShaderSpec.SharedVar.VIEW_POS),
 		"needs_ctx": true,
 	},
-	"view_normal": {
+	ShaderSpec.SharedVar.VIEW_NORMAL: {
 		"type": "vec3",
-		"name": "sv_view_normal",
-		"v_assign": "sv_view_normal = obj_to_view_normal_ctx(NORMAL, svCtx);",
+		"name": ShaderSpec.shared_var_name(ShaderSpec.SharedVar.VIEW_NORMAL),
+		"v_assign": "%s = obj_to_view_normal_ctx(NORMAL, svCtx);" % ShaderSpec.shared_var_name(ShaderSpec.SharedVar.VIEW_NORMAL),
 		"needs_ctx": true,
 	},
-	"world_uv": {
+	ShaderSpec.SharedVar.WORLD_UV: {
 		"type": "vec2",
-		"name": "sv_world_uv",
-		"v_assign": "sv_world_uv = UV;",
+		"name": ShaderSpec.shared_var_name(ShaderSpec.SharedVar.WORLD_UV),
+		"v_assign": "%s = UV;" % ShaderSpec.shared_var_name(ShaderSpec.SharedVar.WORLD_UV),
 		"needs_ctx": false,
 	},
 }
@@ -72,14 +72,14 @@ func request(keys: Array) -> Dictionary:
 func build_global_declarations() -> String:
 	if decl_lines.is_empty():
 		return ""
-	return "// SHARED VARYINGS\n\n" + "\n".join(decl_lines) + "\n"
+	return "\n".join(decl_lines)
 
 func build_vertex_code() -> String:
 	if vertex_lines.is_empty():
 		return ""
 	return "// SHARED VARYINGS (VERTEX)\n" + "\n".join(vertex_lines) + "\n"
 
-func get_var_name(key: String) -> String:
+func get_var_name(key: int) -> String:
 	if not VARS.has(key):
 		return ""
 	return VARS[key]["name"]

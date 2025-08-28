@@ -9,7 +9,7 @@
  */
 
 
-#ifdef SHARED_DEFINE
+#ifdef INCLUDE_WRAPPER
 
 	float _rand_float_offset(float seed){
 		return 100.0 + hash_float_to_float(seed) * 100.0;

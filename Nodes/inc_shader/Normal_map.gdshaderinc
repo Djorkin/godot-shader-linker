@@ -5,7 +5,7 @@
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
 
-#ifdef SHARED_DEFINE
+#ifdef INCLUDE_WRAPPER
 
 	vec3 get_normal_map(vec3 color, float s, vec3 normal, vec3 tangent) 
 	{

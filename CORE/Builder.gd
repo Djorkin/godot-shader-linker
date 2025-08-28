@@ -5,8 +5,8 @@ class_name ShaderBuilder
 var _shader_type: String
 var render_modes := {}
 var uniforms := []
-var vertex_blocks := {}
-var fragment_blocks := {}
+var vertex_blocks := []
+var fragment_blocks := []
 var added_uniforms := {}
 var added_includes := {}
 var include_blocks := [] 
@@ -14,22 +14,7 @@ var added_function_hashes := {}
 var function_blocks := []
 var global_blocks := []
 var defines := {} 
-
-# неиспользуется из-за инстанцирования нового билдера для каждого пайплайна
-func reset() -> void:
-	_shader_type = "spatial"
-	uniforms.clear()
-	vertex_blocks.clear()
-	fragment_blocks.clear()
-	added_uniforms.clear()
-	added_includes.clear()
-	include_blocks.clear()
-	function_blocks.clear() 
-	added_function_hashes.clear() 
-	global_blocks.clear()
-	render_modes.clear()
-	defines.clear()
-
+var uniform_resources := {}
 
 func shader_type(type: String) -> void:
 	_shader_type = type
@@ -78,7 +63,6 @@ func add_uniform(type: String, name: String, default_value = null, hint = null, 
 	added_uniforms[name] = true
 
 
-
 func add_code(code: String, stage) -> void:
 	if not code:
 		return
@@ -96,9 +80,9 @@ func add_code(code: String, stage) -> void:
 		ShaderSpec.Stage.FUNCTIONS:
 			function_blocks.append(code)
 		ShaderSpec.Stage.VERTEX:
-			vertex_blocks[key] = code
+			vertex_blocks.append(code)
 		ShaderSpec.Stage.FRAGMENT:
-			fragment_blocks[key] = code
+			fragment_blocks.append(code)
 
 
 
@@ -115,7 +99,7 @@ func build_shader() -> String:
 		parts.append("\n".join(defines.values()))
 	
 	if include_blocks:
-		parts.append("#define SHARED_DEFINE" + "\n") # только для include файлов 
+		parts.append("#define INCLUDE_WRAPPER" + "\n") # только для include файлов 
 		parts.append("// INCLUDES")
 		parts.append("\n".join(include_blocks) + "\n")
 	
@@ -131,39 +115,20 @@ func build_shader() -> String:
 		parts.append("// FUNCTIONS")
 		parts.append("\n".join(function_blocks) + "\n")
 	
-	if vertex_blocks:
+	if vertex_blocks.size() > 0:
 		parts.append(build_stage_code(ShaderSpec.Stage.VERTEX, vertex_blocks) + "\n")
 	
-	if fragment_blocks:
+	if fragment_blocks.size() > 0:
 		parts.append(build_stage_code(ShaderSpec.Stage.FRAGMENT, fragment_blocks) + "\n")
 	
 	return "\n".join(parts)
 
-func build_stage_code(stage_enum: int, blocks: Dictionary) -> String:
+func build_stage_code(stage_enum: int, blocks: Array) -> String:
 	var code = []
-	if blocks.has("functions"):
-		code.append(blocks["functions"])
-
 	code.append("void %s() {" % ShaderSpec.stage_function_name(stage_enum))
-	
-	if blocks.has("declarations"):
-		for line in blocks["declarations"].split("\n"):
+	for block in blocks:
+		for line in str(block).split("\n"):
 			if line.strip_edges():
 				code.append("\t" + line)
-	
-	for block_key in blocks:
-		if block_key not in ["declarations", "functions"]:
-			for line in blocks[block_key].split("\n"):
-				if line.strip_edges():
-					code.append("\t" + line)
-	
 	code.append("}")
 	return "\n".join(code)
-
-
-func create_material() -> ShaderMaterial:
-	var material = ShaderMaterial.new()
-	var shader = Shader.new()
-	shader.code = build_shader()
-	material.shader = shader
-	return material

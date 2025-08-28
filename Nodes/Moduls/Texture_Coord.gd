@@ -25,6 +25,14 @@ func _init() -> void:
 func get_include_files() -> Array[String]:
 	return [PATHS.INC["BLENDER_COORDS"], PATHS.INC["TEX_COORD"]]
 
+func get_required_shared_varyings() -> Array[int]:
+	var active: Array[String] = get_active_output_sockets()
+	var req: Array[int] = []
+	if "Reflection" in active:
+		req.append(ShaderSpec.SharedVar.WORLD_POS)
+		req.append(ShaderSpec.SharedVar.WORLD_NORMAL)
+	return req
+
 func get_code_blocks() -> Dictionary:
 	var outputs = get_output_vars()
 	var active: Array[String] = get_active_output_sockets()
@@ -48,31 +56,24 @@ func get_code_blocks() -> Dictionary:
 		if key in active and not vert_outputs[key].is_empty():
 			globals.append("varying vec3 %s;" % vert_outputs[key])
 
-	# Глобальные varying для Reflection (отдельные имена, чтобы избежать пересечений)
-	if needs_reflection_data:
-		globals.append("varying vec3 v_world_pos_%s;" % unique_id)
-		globals.append("varying vec3 v_world_normal_%s;" % unique_id)
+
 	
 	# Vertex код
 	var vertex_lines := []
 	# Единожды вычисляем локальную координату, если понадобится
 	if any_active(active, ["Generated", "Object", "Camera", "Reflection"]):
-		vertex_lines.append("\tvec3 _local_vtx = VERTEX;")
+		vertex_lines.append("\tvec3 local_vtx = VERTEX;")
 
 	if "Generated" in active:
-		vertex_lines.append("{gen} = get_generated(_local_vtx);")
+		vertex_lines.append("{gen} = get_generated(local_vtx);")
 	if "Object" in active:
-		vertex_lines.append("{obj} = get_object(_local_vtx, MODEL_MATRIX);")
+		vertex_lines.append("{obj} = get_object(local_vtx, MODEL_MATRIX);")
 	if "Normal" in active:
-		vertex_lines.append("\tvec3 _local_nrm = NORMAL;")
-		vertex_lines.append("{normal} = get_normal(_local_nrm);")
+		vertex_lines.append("\tvec3 local_nrm = NORMAL;")
+		vertex_lines.append("{normal} = get_normal(local_nrm);")
 	if "Camera" in active:
-		vertex_lines.append("{camera} = get_camera(_local_vtx, MODEL_MATRIX, VIEW_MATRIX);")
-	# Varying только для Reflection
-	if needs_reflection_data:
-		vertex_lines.append("\tvec3 _local_nrm = NORMAL;")
-		vertex_lines.append("v_world_pos_%s = get_world_pos(VIEW_MATRIX, MODEL_MATRIX, _local_vtx);" % unique_id)
-		vertex_lines.append("v_world_normal_%s = get_world_normal(VIEW_MATRIX, MODEL_MATRIX, _local_nrm);" % unique_id)
+		vertex_lines.append("{camera} = get_camera(local_vtx, MODEL_MATRIX, VIEW_MATRIX);")
+
 	
 	if vertex_lines.size() > 0:
 		vertex_code = generate_code_block(
@@ -94,9 +95,8 @@ func get_code_blocks() -> Dictionary:
 		fragment_lines.append("vec3 {uv} = get_uv(UV);")
 	if "Window" in active:
 		fragment_lines.append("vec3 {window} = get_window(SCREEN_UV);")
-	# Использование varying только для Reflection
 	if needs_reflection_data:
-		fragment_lines.append("vec3 {reflection} = get_reflection(VIEW_MATRIX, v_world_pos_%s, v_world_normal_%s);" % [unique_id, unique_id])
+		fragment_lines.append("vec3 {reflection} = get_reflection(VIEW_MATRIX, sv_world_pos, sv_world_normal);")
 	
 	if fragment_lines.size() > 0:
 		fragment_code = generate_code_block(
@@ -113,10 +113,11 @@ func get_code_blocks() -> Dictionary:
 	
 	var blocks = {}
 	if globals.size() > 0:
-		var g_key = "global_texcoord_%s" % str(join_declarations(globals).hash())
+		var globals_code := "\n".join(globals)
+		var g_key = "global_texcoord_%s" % str(globals_code.hash())
 		blocks[g_key] = {
 			"stage": "global",
-			"code": join_declarations(globals)
+			"code": globals_code
 		}
 	
 	if !vertex_code.is_empty():

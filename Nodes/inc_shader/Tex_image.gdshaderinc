@@ -7,7 +7,7 @@
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
 
-#ifdef SHARED_DEFINE
+#ifdef INCLUDE_WRAPPER
 
 	vec3 remap_square(vec3 p) {
 	    return p * 2.0 - 1.0;
@@ -157,12 +157,12 @@
 
 	        // Y-projection (XZ plane)
 	        uv = 1.0 - coord.xz;
-	        if (N.y > 0.0) { uv.x = 1.0 - uv.x; }
+	        if (N.y < 0.0) { uv.x = 1.0 - uv.x; }
 	        col_y = sample_texture(uv, tex, params);
 
 	        // Z-projection (XY plane)
-	        uv = 1.0 - coord.yx;
-	        if (N.z > 0.0) { uv.x = 1.0 - uv.x; }
+	        uv = 1.0 - coord.xy;
+	        if (N.z < 0.0) { uv.x = 1.0 - uv.x; }
 	        col_z = sample_texture(uv, tex, params);
 
 

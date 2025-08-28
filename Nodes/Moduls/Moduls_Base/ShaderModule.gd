@@ -102,10 +102,3 @@ func generate_code_block(stage: String, template: String, args: Dictionary) -> S
 	#data += str(get_output_sockets().map(func(s): return s.name + s.type_name()))
 	#data += str(get_code_blocks())
 	#return data.sha1_text()
-
-# TODO: delete
-func join_declarations(decls: Array) -> String:
-	var result = ""
-	for decl in decls:
-		result += decl + "\n"
-	return result

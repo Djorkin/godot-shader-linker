@@ -9,7 +9,7 @@
  */
 
 
-#ifdef SHARED_DEFINE
+#ifdef INCLUDE_WRAPPER
 
 
 	const float _NOISE_WRAP_RANGE = 100000.0;

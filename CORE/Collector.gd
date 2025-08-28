@@ -35,11 +35,12 @@ func configure(builder: ShaderBuilder, shader_type : String = "spatial") -> void
 
 	var modules: Array = registered_modules.values()
 
+
+	recompute_active_output_sockets(modules)
 	configure_shared_varyings(builder, modules)
 	configure_includes(builder, modules)
 
 	var execution_order = topological_sort()
-	recompute_active_output_sockets(modules)
 	for module in execution_order:
 		apply_module(builder, module)
 

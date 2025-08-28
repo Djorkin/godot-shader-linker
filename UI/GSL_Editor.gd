@@ -29,7 +29,7 @@ func _on_create_material_pressed() -> void:
 
 func builder_ready(builder: ShaderBuilder) -> void:
 	if save_mode == SaveMode.SHADER:
-		Saver_inst.save_shader(builder)
+		Saver_inst.save_shader_dialog(builder)
 	elif save_mode == SaveMode.MATERIAL:
-		Saver_inst.save_material(builder)
+		Saver_inst.save_material_dialog(builder)
 	save_mode = SaveMode.NONE

@@ -9,7 +9,7 @@
 
 
 
-#ifdef SHARED_DEFINE
+#ifdef INCLUDE_WRAPPER
 
 	group_uniforms Surface_Render_Settings;
 	uniform bool u_do_multiscatter = true;

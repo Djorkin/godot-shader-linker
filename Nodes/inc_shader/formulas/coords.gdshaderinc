@@ -48,7 +48,7 @@ vec3 blender_to_godot_normal(vec3 blender_normal) {
 
 vec2 flip_uv(vec2 uv) { return vec2(uv.x, 1.0 - uv.y);}
 
-#ifdef SHARED_DEFINE
+#ifdef INCLUDE_WRAPPER
 
 // Структуры контекстов
 struct TransformCtx {

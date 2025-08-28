@@ -21,9 +21,6 @@ var NODE_CLASSES : Dictionary = {
 		"MixModule": MixModule
 }
 
-
-
-
 func instantiate_modules(data: Dictionary) -> Dictionary:
 	var node_table := {}
 	for node_dict in data["nodes"]:
@@ -38,7 +35,6 @@ func instantiate_modules(data: Dictionary) -> Dictionary:
 		node_table[node_dict.get("id")] = module
 	return node_table
 
-
 func add_modules_to_mapper(node_table: Dictionary, data: Dictionary) -> void:
 	for node_dict in data["nodes"]:
 		var id = node_dict.get("id")
@@ -50,15 +46,19 @@ func add_modules_to_mapper(node_table: Dictionary, data: Dictionary) -> void:
 			for p in node_dict["params"]:
 				var v = node_dict["params"][p]
 				module.set_uniform_override(p, sanitize_param_value(v))
+			# Специальная обработка путей текстур для TextureImageModule
+			if module is TextureImageModule and node_dict.has("params"):
+				var params: Dictionary = node_dict["params"]
+				if params.has("image_path") and typeof(params["image_path"]) == TYPE_STRING:
+					var uniform_name = module.get_prefixed_name("image_texture")
+					Builder_inst.uniform_resources[uniform_name] = params["image_path"]
 		Mapper_inst.add_module(module)
-
 
 func register_in_collector() -> void:
 	var final_chain: Array[ShaderModule] = Mapper_inst.build_final_chain()
 	Collector_inst.registered_modules.clear()
 	for mod in final_chain:
 		Collector_inst.register_module(mod) 
-
 
 func link_modules(data: Dictionary, node_table: Dictionary) -> void:
 	for link_item in data["links"]:
@@ -88,7 +88,6 @@ func link_modules(data: Dictionary, node_table: Dictionary) -> void:
 			continue
 		Linker_inst.link_modules(from_mod, from_socket, to_mod, to_socket)
 
-
 func build_chain(data: Dictionary) -> ShaderBuilder:
 	if not (data.has("nodes") and data.has("links")):
 		push_error("No nodes/links fields")
@@ -103,10 +102,6 @@ func build_chain(data: Dictionary) -> ShaderBuilder:
 	
 	Collector_inst.configure(Builder_inst)
 	return Builder_inst
-
-
-
-
 
 func sanitize_param_value(val):
 	match typeof(val):

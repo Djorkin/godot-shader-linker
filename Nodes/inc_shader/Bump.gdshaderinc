@@ -8,7 +8,7 @@
  */
 
 
-#ifdef SHARED_DEFINE
+#ifdef INCLUDE_WRAPPER
 
 // Упрощённый node_bump: принимает dHd (dFdx, dFdy от height), pos и N в одном пространстве
 vec3 node_bump(

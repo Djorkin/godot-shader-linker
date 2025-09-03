@@ -104,7 +104,8 @@ func get_code_blocks() -> Dictionary:
             need_varying = true
             var varying_name := "gen_vec_%s" % unique_id
             var global_decl := "varying vec3 %s;" % varying_name
-            var vertex_code := """\n // {module}: {uid} (VERTEX)\n{varying} = apply_generated(blender_to_godot(VERTEX));\n""".format({
+            var vertex_code := """\n // {module}: {uid} (VERTEX)
+                \n{varying} = apply_generated(blender_to_godot(VERTEX));\n""".format({
                 "module": module_name,
                 "uid": unique_id,
                 "varying": varying_name,

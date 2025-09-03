@@ -11,6 +11,8 @@ var Saver_inst = ShaderSaver.new()
 enum SaveMode { NONE, SHADER, MATERIAL }
 var save_mode: int = SaveMode.NONE
 
+signal request_cpu_data_update
+
 func _ready() -> void:
 	add_child(Saver_inst)
 	SSL.start()
@@ -33,3 +35,6 @@ func builder_ready(builder: ShaderBuilder) -> void:
 	elif save_mode == SaveMode.MATERIAL:
 		Saver_inst.save_material_dialog(builder)
 	save_mode = SaveMode.NONE
+
+func _on_cpu_data_pressed() -> void:
+	emit_signal("request_cpu_data_update")

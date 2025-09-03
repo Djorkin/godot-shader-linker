@@ -98,14 +98,14 @@ func build_shader() -> String:
 		parts.append("// DEFINES")
 		parts.append("\n".join(defines.values()))
 	
+	if global_blocks:
+		parts.append("// GLOBAL")
+		parts.append("\n".join(global_blocks) + "\n")
+	
 	if include_blocks:
 		parts.append("#define INCLUDE_WRAPPER" + "\n") # только для include файлов 
 		parts.append("// INCLUDES")
 		parts.append("\n".join(include_blocks) + "\n")
-	
-	if global_blocks:
-		parts.append("// GLOBAL")
-		parts.append("\n".join(global_blocks) + "\n")
 	
 	if uniforms:
 		parts.append("// UNIFORMS")

@@ -1,4 +1,4 @@
-/* SPDX-FileCopyrightText: 2019-2022 Blender Authors
+/* SPDX-FileCopyrightText: 2019-2023 Blender Authors
  * SPDX-FileCopyrightText: 2025 D.Jorkin
  *
  * Adapted from Blender's gpu_shader_material_tex_image.glsl
@@ -21,11 +21,11 @@
 	        if (p.x == 0.0 && p.y == 0.0) {
 	            u = 0.0;
 	        } else {
-	            u = (1.0 - atan(p.x, -p.y) / 3.14159265) * 0.5;
+	            u = (1.0 - atan(p.x, -p.y) / PI) / 2.0; 
 	        }
-	        v = 1.0 - acos(clamp(-p.z / len, -1.0, 1.0)) / 3.14159265;
+	        v = 1.0 - acos(-p.z / len) / PI;
 	    } else {
-	        u = v = 0.0;
+	        v = u = 0.0;
 	    }
 	    return vec2(u, v);
 	}
@@ -36,7 +36,7 @@
 	    float len = length(p.xy);
 	    float u;
 	    if (len > 0.0) {
-	        u = (1.0 - atan(p.x / len, -p.y / len) / 3.14159265) * 0.5;
+	        u = (1.0 - atan(p.x / len, -p.y / len) / PI) * 0.5;
 	    } else {
 	        u = 0.0;
 	    }
@@ -136,10 +136,10 @@
 	    }
 	}
 
-	void point_texco_clamp(vec3 vin, sampler2D ima, out vec3 vout)
+	void point_texco_clamp(vec3 v, sampler2D ima, out vec3 vout)
 	{
 	    vec2 half_texel = 0.5 / vec2(textureSize(ima, 0));
-	    vout = clamp(vin, half_texel.xyy, 1.0 - half_texel.xyy);
+	    vout = clamp(v, half_texel.xyy, 1.0 - half_texel.xyy);
 	}
 
 	vec4 _sample_image( vec3 coord, vec3 N, sampler2D tex, Tex_img_params params){
@@ -161,8 +161,8 @@
 	        col_y = sample_texture(uv, tex, params);
 
 	        // Z-projection (XY plane)
-	        uv = 1.0 - coord.xy;
-	        if (N.z < 0.0) { uv.x = 1.0 - uv.x; }
+	        uv = 1.0 - coord.yx;
+	        if (N.z > 0.0) { uv.x = 1.0 - uv.x; }
 	        col_z = sample_texture(uv, tex, params);
 
 

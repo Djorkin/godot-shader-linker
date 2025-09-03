@@ -3,32 +3,47 @@
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
 
+mat3 RODRI_ROT(vec3 axis, float angle) {
+    axis = normalize(axis);
+    float c = cos(angle);
+    float s = sin(angle);
+    float ic = 1.0 - c;
 
-const mat4 BLENDER_TO_GODOT = mat4(
-    vec4(1.0, 0.0, 0.0, 0.0),
-    vec4(0.0, 0.0, 1.0, 0.0),
-    vec4(0.0, 1.0, 0.0, 0.0),
-    vec4(0.0, 0.0, 0.0, 1.0)
-);
+    return mat3(
+        vec3(
+            c + axis.x * axis.x * ic,
+            axis.y * axis.x * ic + axis.z * s,
+            axis.z * axis.x * ic - axis.y * s
+        ),
+        vec3(
+            axis.x * axis.y * ic - axis.z * s,
+            c + axis.y * axis.y * ic,
+            axis.z * axis.y * ic + axis.x * s
+        ),
+        vec3(
+            axis.x * axis.z * ic + axis.y * s,
+            axis.y * axis.z * ic - axis.x * s,
+            c + axis.z * axis.z * ic
+        )
+    );
+}
 
-const mat4 ROT_90 = mat4(
-    vec4(1.0, 0.0,  0.0, 0.0),
-    vec4(0.0, 0.0, 1.0, 0.0),
-    vec4(0.0, -1.0,  0.0, 0.0),
-    vec4(0.0, 0.0,  0.0, 1.0)
-);
+// Обёртки для стандартных осей
+mat3 ROT_X(float angle) {
+    return RODRI_ROT(vec3(1.0, 0.0, 0.0), radians(angle));
+}
 
-const mat3 ROT_MATRIX_Y_TO_Z = mat3(
-    vec3(1.0,  0.0, 0.0),
-    vec3(0.0,  0.0, -1.0),
-    vec3(0.0, 1.0, 0.0)
-);
+mat3 ROT_Y(float angle) {
+    return RODRI_ROT(vec3(0.0, 1.0, 0.0), radians(angle));
+}
 
-const mat3 ROT_MATRIX_Z_TO_Y = mat3(
-    vec3(1.0,  0.0, 0.0),   
-    vec3(0.0,  0.0, 1.0),  
-    vec3(0.0, -1.0, 0.0)  
-);
+mat3 ROT_Z(float angle) {
+    return RODRI_ROT(vec3(0.0, 0.0, 1.0), radians(angle));
+}
+
+mat3 ROTATE(vec3 angle) {
+    return RODRI_ROT(vec3(1.0, 0.0, 0.0), radians(angle.x)) * RODRI_ROT(vec3(0.0, 1.0, 0.0), radians(angle.y)) * RODRI_ROT(vec3(0.0, 0.0, 1.0), radians(angle.z));
+}
 
 
 const mat3 MIRROR_XZ = mat3(
@@ -37,14 +52,6 @@ const mat3 MIRROR_XZ = mat3(
     vec3(0.0, 0.0, -1.0)
 );
 
-
-vec3 blender_to_godot(vec3 blender_pos) {
-    return (BLENDER_TO_GODOT * vec4(blender_pos, 1.0)).xyz;
-}
-
-vec3 blender_to_godot_normal(vec3 blender_normal) {
-    return normalize((BLENDER_TO_GODOT * vec4(blender_normal, 0.0)).xyz) ;
-}
 
 vec2 flip_uv(vec2 uv) { return vec2(uv.x, 1.0 - uv.y);}
 
@@ -111,7 +118,7 @@ vec3 world_to_view_normal(vec3 n, mat4 view_matrix) { return normalize((view_mat
 vec3 obj_to_view_normal(vec3 n, mat4 model_matrix, mat4 view_matrix) { return world_to_view_normal(obj_to_world_normal(n, model_matrix), view_matrix); }
 vec3 view_to_world_normal(vec3 n, mat4 view_matrix) { return normalize((inverse(view_matrix) * vec4(n, 0.0)).xyz); }
 
-// Точное преобразование нормали через normal-matrix (если доступна)
+// Точное преобразование нормали через normal-matrix 
 vec3 obj_to_world_normal_mn(vec3 n, mat3 model_normal_matrix) { return normalize(model_normal_matrix * n); }
 vec3 obj_to_view_normal_mn(vec3 n, mat3 model_normal_matrix, mat4 view_matrix) {
     return world_to_view_normal(obj_to_world_normal_mn(n, model_normal_matrix), view_matrix);
@@ -122,10 +129,6 @@ vec3 obj_to_world_normal_ctx(vec3 n, TransformCtx ctx) { return normalize(ctx.mo
 vec3 world_to_view_normal_ctx(vec3 n, TransformCtx ctx) { return normalize((ctx.view * vec4(n, 0.0)).xyz); }
 vec3 obj_to_view_normal_ctx(vec3 n, TransformCtx ctx) { return world_to_view_normal_ctx(obj_to_world_normal_ctx(n, ctx), ctx); }
 vec3 view_to_world_normal_ctx(vec3 n, TransformCtx ctx) { return normalize((ctx.inv_view * vec4(n, 0.0)).xyz); }
-
-// Камера
-vec3 camera_world_pos(mat4 view_matrix) { return (inverse(view_matrix) * vec4(0.0, 0.0, 0.0, 1.0)).xyz; }
-vec3 camera_world_pos_ctx(TransformCtx ctx) { return (ctx.inv_view * vec4(0.0, 0.0, 0.0, 1.0)).xyz; }
 
 
 // Строит ортонормированный базис из нормали и тангента. bitangent_sign = +1/-1.

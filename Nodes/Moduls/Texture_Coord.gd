@@ -28,10 +28,25 @@ func get_include_files() -> Array[String]:
 func get_required_shared_varyings() -> Array[int]:
 	var active: Array[String] = get_active_output_sockets()
 	var req: Array[int] = []
+	if "Camera" in active:
+		req.append(ShaderSpec.SharedVar.VIEW_POS)
 	if "Reflection" in active:
 		req.append(ShaderSpec.SharedVar.WORLD_POS)
 		req.append(ShaderSpec.SharedVar.WORLD_NORMAL)
 	return req
+
+func get_output_vars() -> Dictionary:
+	var vars = {
+		"Generated": "v_generated",
+		"Object":    "v_object",
+		"Normal":    "v_normal",
+		"Camera":    ShaderSpec.shared_var_name(ShaderSpec.SharedVar.VIEW_POS),
+		"UV":        "v_uv",
+		"Window":    "v_window",
+		"Reflection": "v_reflection_%s" % unique_id
+	}
+	return vars
+
 
 func get_code_blocks() -> Dictionary:
 	var outputs = get_output_vars()
@@ -41,7 +56,6 @@ func get_code_blocks() -> Dictionary:
 	var fragment_code := ""
 	var globals: Array[String] = []
 	
-	# Список выходов, вычисляемых в вершинном шейдере и используемых далее во фрагменте
 	var vert_outputs := {
 		"Generated": outputs.get("Generated", ""),
 		"Object": outputs.get("Object", ""),
@@ -51,28 +65,23 @@ func get_code_blocks() -> Dictionary:
 
 	var needs_reflection_data := "Reflection" in active
 	
-	# Добавляем varying для каждого активного выхода, вычисляемого в вершине
+	if "Generated" in active:
+		globals.append("instance uniform vec3 bbox_min : instance_index(0);")
+		globals.append("instance uniform vec3 bbox_max : instance_index(1);")
+
 	for key in vert_outputs.keys():
-		if key in active and not vert_outputs[key].is_empty():
+		if key in active and key != "Camera" and not vert_outputs[key].is_empty():
 			globals.append("varying vec3 %s;" % vert_outputs[key])
 
-
-	
 	# Vertex код
 	var vertex_lines := []
-	# Единожды вычисляем локальную координату, если понадобится
-	if any_active(active, ["Generated", "Object", "Camera", "Reflection"]):
-		vertex_lines.append("\tvec3 local_vtx = VERTEX;")
 
 	if "Generated" in active:
-		vertex_lines.append("{gen} = get_generated(local_vtx);")
+		vertex_lines.append("{gen} = get_generated(VERTEX);")
 	if "Object" in active:
-		vertex_lines.append("{obj} = get_object(local_vtx, MODEL_MATRIX);")
+		vertex_lines.append("{obj} = get_object(VERTEX);")
 	if "Normal" in active:
-		vertex_lines.append("\tvec3 local_nrm = NORMAL;")
-		vertex_lines.append("{normal} = get_normal(local_nrm);")
-	if "Camera" in active:
-		vertex_lines.append("{camera} = get_camera(local_vtx, MODEL_MATRIX, VIEW_MATRIX);")
+		vertex_lines.append("{normal} = normalize(NORMAL* ROT_X(-90.0));")
 
 	
 	if vertex_lines.size() > 0:
@@ -135,20 +144,9 @@ func get_code_blocks() -> Dictionary:
 	
 	return blocks
 
-func get_output_vars() -> Dictionary:
-	var vars = {
-		"Generated": "v_generated",
-		"Object":    "v_object",
-		"Normal":    "v_normal",
-		"Camera":    "v_camera",
-		"UV":        "v_uv",
-		"Window":    "v_window",
-		"Reflection": "v_reflection_%s" % unique_id
-	}
-	return vars
-
-func any_active(active_list: Array, check_names: Array) -> bool:
-	for name in check_names:
-		if name in active_list:
-			return true
-	return false
+func get_compile_defines() -> Array[String]:
+	var active: Array[String] = get_active_output_sockets()
+	var arr: Array[String] = []
+	if "Generated" in active:
+		arr.append("NEED_AABB")
+	return arr

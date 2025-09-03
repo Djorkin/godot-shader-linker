@@ -46,5 +46,16 @@ layout_mode = 2
 size_flags_vertical = 3
 text = "Link  Material"
 
+[node name="MarginContainer3" type="MarginContainer" parent="Panel/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/margin_top = 1
+theme_override_constants/margin_bottom = 1
+
+[node name="CPU DATA" type="Button" parent="Panel/VBoxContainer/MarginContainer3"]
+layout_mode = 2
+size_flags_vertical = 3
+text = "CPU DATA"
+
 [connection signal="pressed" from="Panel/VBoxContainer/MarginContainer/Create Shader" to="." method="_on_create_shader_pressed"]
 [connection signal="pressed" from="Panel/VBoxContainer/MarginContainer2/Create Material" to="." method="_on_create_material_pressed"]
+[connection signal="pressed" from="Panel/VBoxContainer/MarginContainer3/CPU DATA" to="." method="_on_cpu_data_pressed"]

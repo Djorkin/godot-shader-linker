@@ -69,7 +69,7 @@ func get_code_blocks() -> Dictionary:
 	}
 
 	var frag_code := """
-// {module}: {uid} (FRAG)
+// {module}: {uid}
 Tex_img_params params_{uid};
 params_{uid}.interpolation  = u_{uid}_interpolation;
 params_{uid}.projection     = u_{uid}_projection;
@@ -79,7 +79,7 @@ params_{uid}.color_space    = u_{uid}_color_space;
 params_{uid}.alpha_mode     = u_{uid}_alpha_mode;
 
 vec4 tex_{uid} = _sample_image(vec3(flip_uv({coord}.xy), {coord}.z), 
-								{world_normal},
+								{world_normal} * ROT_X(-90.0),
 								u_{uid}_image_texture,
 								params_{uid});
 

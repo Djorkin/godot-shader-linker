@@ -8,11 +8,7 @@
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
 
-
-
-
-
-#ifdef SHARED_DEFINE
+#ifdef INCLUDE_WRAPPER
 
 // 3D FRACTAL NOISE 
 	float noise_fbm(vec3 co,

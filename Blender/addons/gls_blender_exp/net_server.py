@@ -466,36 +466,80 @@ def _gather_material():
                 node_info["inputs"] = ["Factor", "A_Float", "B_Float"]
 
         elif n.bl_idname == "ShaderNodeMath":
-            # Map Blender operation to MathModule.Operation enum
+            # Map Blender operation to MathModule.Operation enum (indices must match MathModule.Operation order)
             op_map = {
+                # Functions
                 "ADD": 0,
                 "SUBTRACT": 1,
                 "MULTIPLY": 2,
                 "DIVIDE": 3,
-                "POWER": 4,
-                "LOGARITHM": 5,
-                "SINE": 6,
-                "COSINE": 7,
-                "TANGENT": 8,
-                "FLOOR": 9,
-                "CEIL": 10,
-                "FRACT": 11,
-                "MINIMUM": 12,
-                "MAXIMUM": 13,
-                "MODULO": 14,
-                "WRAP": 15,
-                "SNAP": 16,
-                "PINGPONG": 17,
-                "ARCTAN2": 18,
-                "COMPARE": 19,
-                "ROUND": 20,
-                "TRUNCATE": 21,
+                "MULTIPLY_ADD": 4,
+                "POWER": 5,
+                "LOGARITHM": 6,
+                "SQRT": 7,
+                "INVERSE_SQRT": 8,
+                "ABSOLUTE": 9,
+                "EXPONENT": 10,
+                # Trigonometric & Rounding (unary)
+                "SINE": 11,
+                "COSINE": 12,
+                "TANGENT": 13,
+                "FLOOR": 14,
+                "CEIL": 15,
+                "FRACT": 16,
+                "FRACTION": 16,  # alias safety
+                # Comparison
+                "MINIMUM": 17,
+                "MAXIMUM": 18,
+                "LESS_THAN": 19,
+                "GREATER_THAN": 20,
+                "SIGN": 21,
+                # Modulo & step
+                "MODULO": 22,
+                "TRUNCATED_MODULO": 23,
+                "FLOORED_MODULO": 24,
+                "WRAP": 25,
+                "SNAP": 26,
+                "PINGPONG": 27,
+                # Angles
+                "ARCTAN2": 28,
+                "ATAN2": 28,  # alias safety
+                # Compare with epsilon
+                "COMPARE": 29,
+                # Rounding others
+                "ROUND": 30,
+                "TRUNC": 31,
+                "TRUNCATE": 31,  # alias safety
+                # Smooth min/max
+                "SMOOTH_MIN": 32,
+                "SMOOTH_MAX": 33,
+                # Appended ops
+                "ARCSINE": 34,
+                "ASIN": 34,
+                "ARCCOSINE": 35,
+                "ACOS": 35,
+                "ARCTANGENT": 36,
+                "ATAN": 36,
+                "HYPERBOLIC_SINE": 37,
+                "SINH": 37,
+                "HYPERBOLIC_COSINE": 38,
+                "COSH": 38,
+                "HYPERBOLIC_TANGENT": 39,
+                "TANH": 39,
+                "TO_RADIANS": 40,
+                "RADIANS": 40,
+                "TO_DEGREES": 41,
+                "DEGREES": 41,
             }
+            raw_op = getattr(n, "operation", "ADD")
+            op_val = str(raw_op).upper().replace(" ", "_")
+            op_idx = op_map.get(op_val, 0)
+            params["operation"] = op_idx
+            # expose raw blender value for debugging
             try:
-                op_val = str(getattr(n, "operation", "ADD")).upper().replace(" ", "_")
+                params["bl_operation"] = str(raw_op)
             except Exception:
-                op_val = "ADD"
-            params["operation"] = op_map.get(op_val, 0)
+                params["bl_operation"] = "ADD"
 
             # Clamp flag
             try:
@@ -503,7 +547,7 @@ def _gather_material():
             except Exception:
                 params["use_clamp"] = False
 
-            # Ensure unlinked inputs are exported as 'a' and 'b' (instead of generic 'value')
+            # Ensure unlinked inputs are exported as 'a', 'b'
             params.pop("value", None)
             try:
                 a_sock = n.inputs[0]
@@ -518,8 +562,58 @@ def _gather_material():
             except Exception:
                 pass
 
+            # Third input for selected operations
+            three_input_ops = {"MULTIPLY_ADD", "COMPARE", "WRAP", "SMOOTH_MIN", "SMOOTH_MAX"}
+            needs_c = op_val in three_input_ops
+            if needs_c and len(n.inputs) > 2:
+                try:
+                    c_sock = n.inputs[2]
+                    if not c_sock.is_linked and hasattr(c_sock, "default_value"):
+                        params["c"] = float(c_sock.default_value)
+                except Exception:
+                    pass
+
             # Override inputs names to match MathModule signature
-            node_info["inputs"] = ["A", "B"]
+            unary_ops = {
+                "ABSOLUTE","LOGARITHM","SQRT","INVERSE_SQRT","EXPONENT",
+                "SINE","COSINE","TANGENT","FLOOR","CEIL","FRACT","FRACTION",
+                "ROUND","TRUNC","TRUNCATE","SIGN",
+                "ARCSINE","ARCCOSINE","ARCTANGENT",
+                "HYPERBOLIC_SINE","HYPERBOLIC_COSINE","HYPERBOLIC_TANGENT",
+                "TO_RADIANS","TO_DEGREES"
+            }
+            if needs_c:
+                node_info["inputs"] = ["A", "B", "C"]
+            elif op_val in unary_ops:
+                node_info["inputs"] = ["A"]
+            else:
+                node_info["inputs"] = ["A", "B"]
+
+            # Ensure unlinked inputs are exported as 'a', 'b'
+            params.pop("value", None)
+            try:
+                a_sock = n.inputs[0]
+                if not a_sock.is_linked and hasattr(a_sock, "default_value"):
+                    params["a"] = float(a_sock.default_value)
+            except Exception:
+                pass
+            try:
+                b_sock = n.inputs[1]
+                if not b_sock.is_linked and hasattr(b_sock, "default_value"):
+                    params["b"] = float(b_sock.default_value)
+            except Exception:
+                pass
+
+            # Third input for selected operations
+            three_input_ops = {"MULTIPLY_ADD", "COMPARE", "WRAP", "SMOOTH_MIN", "SMOOTH_MAX"}
+            needs_c = op_val in three_input_ops
+            if needs_c and len(n.inputs) > 2:
+                try:
+                    c_sock = n.inputs[2]
+                    if not c_sock.is_linked and hasattr(c_sock, "default_value"):
+                        params["c"] = float(c_sock.default_value)
+                except Exception:
+                    pass
 
         elif n.bl_idname == "ShaderNodeTexNoise":
             dims_map = {"1D": 0, "2D": 1, "3D": 2, "4D": 3}
@@ -599,12 +693,33 @@ def _gather_material():
                 in_idx = max(0, in_idx - 1)  # запасной вариант: убираем скрытый Clamp
         elif l.to_node.bl_idname == "ShaderNodeMath":
             try:
-                # У ShaderNodeMath оба входа имеют одинаковое имя ("Value").
-                # Берём индекс по объектной идентичности без смещения: A=0, B=1.
-                inputs_seq = list(l.to_node.inputs)
-                in_idx = inputs_seq.index(l.to_socket)
+                op_val = str(getattr(l.to_node, "operation", "ADD")).upper().replace(" ", "_")
+            except Exception:
+                op_val = "ADD"
+            three_input_ops = {"MULTIPLY_ADD", "COMPARE", "WRAP", "SMOOTH_MIN", "SMOOTH_MAX"}
+            unary_ops = {
+                "ABSOLUTE","LOGARITHM","SQRT","INVERSE_SQRT","EXPONENT",
+                "SINE","COSINE","TANGENT","FLOOR","CEIL","FRACT","FRACTION",
+                "ROUND","TRUNC","TRUNCATE","SIGN",
+                "ARCSINE","ARCCOSINE","ARCTANGENT",
+                "HYPERBOLIC_SINE","HYPERBOLIC_COSINE","HYPERBOLIC_TANGENT",
+                "TO_RADIANS","TO_DEGREES"
+            }
+            need_inputs = 3 if op_val in three_input_ops else (1 if op_val in unary_ops else 2)
+
+            all_inputs = list(l.to_node.inputs)
+            try:
+                target_pos = all_inputs.index(l.to_socket)
             except ValueError:
-                pass
+                target_pos = 0
+
+            # Если вход неактивен для текущей операции – пропускаем линк целиком
+            if target_pos >= need_inputs:
+                # skip link to inactive socket (e.g., third input when op is not 3-input)
+                continue
+
+            # Активные входы индексируются как 0..need_inputs-1 в том же порядке
+            in_idx = target_pos
 
         # формат: "from_id,out_idx -> to_id,in_idx"
         links.append(f"{from_id},{out_idx},{to_id},{in_idx}")

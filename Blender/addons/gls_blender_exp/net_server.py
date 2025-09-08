@@ -465,6 +465,62 @@ def _gather_material():
             else:
                 node_info["inputs"] = ["Factor", "A_Float", "B_Float"]
 
+        elif n.bl_idname == "ShaderNodeMath":
+            # Map Blender operation to MathModule.Operation enum
+            op_map = {
+                "ADD": 0,
+                "SUBTRACT": 1,
+                "MULTIPLY": 2,
+                "DIVIDE": 3,
+                "POWER": 4,
+                "LOGARITHM": 5,
+                "SINE": 6,
+                "COSINE": 7,
+                "TANGENT": 8,
+                "FLOOR": 9,
+                "CEIL": 10,
+                "FRACT": 11,
+                "MINIMUM": 12,
+                "MAXIMUM": 13,
+                "MODULO": 14,
+                "WRAP": 15,
+                "SNAP": 16,
+                "PINGPONG": 17,
+                "ARCTAN2": 18,
+                "COMPARE": 19,
+                "ROUND": 20,
+                "TRUNCATE": 21,
+            }
+            try:
+                op_val = str(getattr(n, "operation", "ADD")).upper().replace(" ", "_")
+            except Exception:
+                op_val = "ADD"
+            params["operation"] = op_map.get(op_val, 0)
+
+            # Clamp flag
+            try:
+                params["use_clamp"] = bool(getattr(n, "use_clamp", False))
+            except Exception:
+                params["use_clamp"] = False
+
+            # Ensure unlinked inputs are exported as 'a' and 'b' (instead of generic 'value')
+            params.pop("value", None)
+            try:
+                a_sock = n.inputs[0]
+                if not a_sock.is_linked and hasattr(a_sock, "default_value"):
+                    params["a"] = float(a_sock.default_value)
+            except Exception:
+                pass
+            try:
+                b_sock = n.inputs[1]
+                if not b_sock.is_linked and hasattr(b_sock, "default_value"):
+                    params["b"] = float(b_sock.default_value)
+            except Exception:
+                pass
+
+            # Override inputs names to match MathModule signature
+            node_info["inputs"] = ["A", "B"]
+
         elif n.bl_idname == "ShaderNodeTexNoise":
             dims_map = {"1D": 0, "2D": 1, "3D": 2, "4D": 3}
             try:
@@ -541,6 +597,14 @@ def _gather_material():
                 in_idx = visible_inputs.index(l.to_socket)
             except ValueError:
                 in_idx = max(0, in_idx - 1)  # запасной вариант: убираем скрытый Clamp
+        elif l.to_node.bl_idname == "ShaderNodeMath":
+            try:
+                # У ShaderNodeMath оба входа имеют одинаковое имя ("Value").
+                # Берём индекс по объектной идентичности без смещения: A=0, B=1.
+                inputs_seq = list(l.to_node.inputs)
+                in_idx = inputs_seq.index(l.to_socket)
+            except ValueError:
+                pass
 
         # формат: "from_id,out_idx -> to_id,in_idx"
         links.append(f"{from_id},{out_idx},{to_id},{in_idx}")

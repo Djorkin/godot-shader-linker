@@ -7,10 +7,11 @@
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
 
-#ifdef INCLUDE_WRAPPER
+// В будущем этот файл будет рефакторен для избавления от ветвления в шейдере.
 
+#ifdef INCLUDE_WRAPPER
 	vec3 remap_square(vec3 p) {
-	    return p * 2.0 - 1.0;
+	    return  p * 2.0 - 1.0;
 	}
 
 	// Algorithm from Blender: point_map_to_sphere
@@ -21,29 +22,29 @@
 	        if (p.x == 0.0 && p.y == 0.0) {
 	            u = 0.0;
 	        } else {
-	            u = (1.0 - atan(p.x, -p.y) / PI) / 2.0; 
+	            u = (1.0 - atan(p.x, p.y) / PI) / 2.0; 
 	        }
-	        v = 1.0 - acos(-p.z / len) / PI;
+	        v = 1.0 - acos(p.z / len) / PI;
 	    } else {
 	        v = u = 0.0;
 	    }
-	    return vec2(u, v);
+	    return vec2(u, -v);
 	}
 
 	// Algorithm from Blender: point_map_to_tube
 	vec2 tube_map(vec3 p) {
-	    float v = (-p.z + 1.0) * 0.5;
+	    float v = (p.z + 1.0) * 0.5;
 	    float len = length(p.xy);
 	    float u;
 	    if (len > 0.0) {
-	        u = (1.0 - atan(p.x / len, -p.y / len) / PI) * 0.5;
+	        u = (1.0 - atan(p.x / len, p.y / len) / PI) / 2.0;
 	    } else {
 	        u = 0.0;
 	    }
-	    return vec2(u, v);
+	    return vec2(u, -v);
 	}
 
-	float cubic_weight(float x) {
+/* 	float cubic_weight(float x) {
 	    x = abs(x);
 	    float w;
 	    if (x <= 1.0) {
@@ -54,7 +55,7 @@
 	        w = 0.0;
 	    }
 	    return w;
-	}
+	} */
 
 	vec2 wrap_uv(vec2 uv, int extension) {
 	    if (extension == 1) {
@@ -67,41 +68,18 @@
 	    return uv;
 	}
 
-	vec4 tex_nomip(sampler2D tex, vec2 uv)
-	{
-	    return textureGrad(tex, uv, vec2(0.0), vec2(0.0));
-	}
-
-	vec4 sample_nomip(vec2 uv, sampler2D tex, Tex_img_params p)
-	{
-	    vec4 c = textureGrad(tex, uv, vec2(0.0), vec2(0.0)); // LOD-0
-	    if (p.color_space == 0) { c.rgb = pow(c.rgb, vec3(2.2)); }
-	    return c;
-	}
-
 	vec4 sample_texture(vec2 uv, sampler2D tex, Tex_img_params p)
 	{
-	    // Save original coordinates before wrapping to ensure derivatives are correct
-	    vec2 orig_uv = uv;
-	    vec2 uvw    = wrap_uv(orig_uv, p.extension);
-	    bool need_nomip = false;              
-
-	    if (need_nomip) {
-	        vec4 col = tex_nomip(tex, uv);
-	        if (p.color_space == 0) { col.rgb = pow(col.rgb, vec3(2.2)); }
-	        return col;
-	    }
+	    vec2 uvw = wrap_uv(uv, p.extension);
 
 	    if (p.interpolation == 1) { // Closest
 	        vec2 size = vec2(textureSize(tex, 0));
 	        vec2 uv_px = (floor(uvw * size) + 0.5) / size;
 	        vec4 outc = texture(tex, uv_px);
-	        if (p.color_space == 0) {
-	            outc.rgb = pow(outc.rgb, vec3(2.2));
-	        }
+	        outc.rgb = mix(outc.rgb, color_srgb_to_scene_linear(outc.rgb), 1.0 - step(0.5, float(p.color_space))); // Временное решение.
 	        return outc;
 	    }
-	    else if (p.interpolation == 2) { // Cubic (Catmull-Rom)
+/* 	    else if (p.interpolation == 2) { // Cubic (Catmull-Rom)
 	        vec2 texSize = vec2(textureSize(tex, 0));
 	        vec2 pxPos   = uvw * texSize - 0.5;
 	        vec2 base    = floor(pxPos);
@@ -124,23 +102,26 @@
 	            outc.rgb = pow(outc.rgb, vec3(2.2));
 	        }
 	        return outc;
-	    }
+	    } */
 	    else { // Linear (default)
-	        vec2 dudx = dFdx(orig_uv);
-	        vec2 dudy = dFdy(orig_uv);
-	        vec4 outc = textureGrad(tex, uvw, dudx, dudy);
-	        if (p.color_space == 0) {
-	            outc.rgb = pow(outc.rgb, vec3(2.2));
+	        vec2 dudx = dFdx(uv);
+	        vec2 dudy = dFdy(uv);
+	        if (p.extension != 1) {
+	            dudx.x = fract(dudx.x + 0.5) - 0.5;
+	            dudy.x = fract(dudy.x + 0.5) - 0.5;
 	        }
+	        vec4 outc = textureGrad(tex, uvw, dudx, dudy);
+	        outc.rgb = mix(outc.rgb, color_srgb_to_scene_linear(outc.rgb), 1.0 - step(0.5, float(p.color_space))); // Временное решение. TODO: Заранее генерировать в GSL нужную функцию с выбранными параметрами.
 	        return outc;
 	    }
 	}
 
-	void point_texco_clamp(vec3 v, sampler2D ima, out vec3 vout)
+/* 	void point_texco_clamp(vec3 v, sampler2D ima, out vec3 vout)
 	{
 	    vec2 half_texel = 0.5 / vec2(textureSize(ima, 0));
 	    vout = clamp(v, half_texel.xyy, 1.0 - half_texel.xyy);
-	}
+		vout = v;
+	} */
 
 	vec4 _sample_image( vec3 coord, vec3 N, sampler2D tex, Tex_img_params params){
 	    if (params.projection == 1) {
@@ -152,7 +133,7 @@
 
 	        // X-projection (YZ plane)
 	        uv = 1.0 - coord.yz;
-	        if (N.x < 0.0) { uv.x = 1.0 - uv.x; }
+	        if (N.x > 0.0) { uv.x = 1.0 - uv.x; }
 	        col_x = sample_texture(uv, tex, params);
 
 	        // Y-projection (XZ plane)
@@ -160,9 +141,9 @@
 	        if (N.y < 0.0) { uv.x = 1.0 - uv.x; }
 	        col_y = sample_texture(uv, tex, params);
 
-	        // Z-projection (XY plane)
+	        // Z-projection (YX plane)
 	        uv = 1.0 - coord.yx;
-	        if (N.z > 0.0) { uv.x = 1.0 - uv.x; }
+	        if (N.z < 0.0) { uv.x = 1.0 - uv.x; }
 	        col_z = sample_texture(uv, tex, params);
 
 
@@ -191,21 +172,17 @@
 	        return color;
 	    }
 	    else if (params.projection == 2) { // Sphere
-	        vec3 coord_c;
-	        point_texco_clamp(coord, tex, coord_c);
-	        vec3 p = remap_square(coord_c);
+	        vec3 p = remap_square(coord);
 	        vec2 uv = sphere_map(p);
-	        return sample_nomip(uv, tex, params);
+	        return sample_texture(uv, tex, params);
 	    }
 	    else if (params.projection == 3) { // Tube
-	        vec3 coord_c;
-	        point_texco_clamp(coord, tex, coord_c);
-	        vec3 p = remap_square(coord_c);
+	        vec3 p = remap_square(coord);
 	        vec2 uv = tube_map(p);
-	        return sample_nomip(uv, tex, params);
+	        return sample_texture(uv, tex, params);
 	    }
 	    else { // Flat
-	        return sample_texture(coord.xy, tex, params);
+	        return sample_texture(flip_uv(coord.xy), tex, params);
 	    }
 	}
 #endif

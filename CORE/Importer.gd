@@ -41,12 +41,12 @@ func add_modules_to_mapper(node_table: Dictionary, data: Dictionary) -> void:
 		if not node_table.has(id):
 			continue
 		var module: ShaderModule = node_table[id]
-		# Передача параметров
+		# Pass parameters
 		if node_dict.has("params") and typeof(node_dict["params"]) == TYPE_DICTIONARY:
 			for p in node_dict["params"]:
 				var v = node_dict["params"][p]
 				module.set_uniform_override(p, sanitize_param_value(v))
-			# Специальная обработка путей текстур для TextureImageModule
+			# Special handling of texture paths for TextureImageModule
 			if module is TextureImageModule and node_dict.has("params"):
 				var params: Dictionary = node_dict["params"]
 				if params.has("image_path") and typeof(params["image_path"]) == TYPE_STRING:
@@ -112,7 +112,6 @@ func sanitize_param_value(val):
 				return Vector4(val[0], val[1], val[2], val[3])
 			return val
 		TYPE_FLOAT:
-			# Если число целое – приводим к int
 			if int(val) == val:
 				return int(val)
 			return val

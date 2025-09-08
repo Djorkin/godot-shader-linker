@@ -1,8 +1,11 @@
+# SPDX-FileCopyrightText: 2025 D.Jorkin
+# SPDX-License-Identifier: GPL-3.0-or-later
+
 @tool
 class_name CpuShaderData
 
-# Сервис для передачи CPU-данных (например, AABB) в шейдеры как per-instance параметры.
-# Политика: объектное пространство (mesh.get_aabb()).
+# Service to push CPU-side data (e.g., AABB) into shaders as per-instance parameters.
+
 
 static func update_instance(inst: GeometryInstance3D, only_if_needed: bool = true) -> void:
 	if inst == null:
@@ -17,7 +20,6 @@ static func update_instance(inst: GeometryInstance3D, only_if_needed: bool = tru
 	var aabb: AABB = mi.mesh.get_aabb()
 	var min_v: Vector3 = aabb.position
 	var max_v: Vector3 = aabb.position + aabb.size
-	# Записываем как per-instance параметры
 	mi.set_instance_shader_parameter("bbox_min", min_v)
 	mi.set_instance_shader_parameter("bbox_max", max_v)
 	if Engine.is_editor_hint():
@@ -44,14 +46,15 @@ static func iter_geometry_instances(root: Node) -> Array:
 
 static func instance_materials_require_bbox(mi: MeshInstance3D) -> bool:
 	var mesh: Mesh = mi.mesh
+	if mesh == null:
+		return false
 	var sc: int = mesh.get_surface_count()
-	for i in sc:
+	for i in range(sc):
 		var mat: Material = mi.get_surface_override_material(i)
 		if mat == null:
 			mat = mesh.surface_get_material(i)
 		if material_declares_bbox(mat):
 			return true
-	# Также проверим material_override, если используется единый материал
 	if mi.material_override and material_declares_bbox(mi.material_override):
 		return true
 	return false
@@ -65,5 +68,4 @@ static func material_declares_bbox(mat: Material) -> bool:
 	if sm.shader == null:
 		return false
 	var code := String(sm.shader.code)
-	# Достаточно наличия имён униформов; это устойчиво при сборке/линковке
 	return code.find("bbox_min") != -1 and code.find("bbox_max") != -1

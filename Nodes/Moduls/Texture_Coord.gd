@@ -23,7 +23,7 @@ func _init() -> void:
 		socket.set_parent_module(self)
 
 func get_include_files() -> Array[String]:
-	return [PATHS.INC["BLENDER_COORDS"], PATHS.INC["TEX_COORD"]]
+	return [PATHS.INC["COORDS"], PATHS.INC["TEX_COORD"]]
 
 func get_required_shared_varyings() -> Array[int]:
 	var active: Array[String] = get_active_output_sockets()
@@ -40,7 +40,7 @@ func get_output_vars() -> Dictionary:
 		"Generated": "v_generated",
 		"Object":    "v_object",
 		"Normal":    "v_normal",
-		"Camera":    ShaderSpec.shared_var_name(ShaderSpec.SharedVar.VIEW_POS),
+		"Camera":    "v_camera",
 		"UV":        "v_uv",
 		"Window":    "v_window",
 		"Reflection": "v_reflection_%s" % unique_id
@@ -65,15 +65,12 @@ func get_code_blocks() -> Dictionary:
 
 	var needs_reflection_data := "Reflection" in active
 	
-	if "Generated" in active:
-		globals.append("instance uniform vec3 bbox_min : instance_index(0);")
-		globals.append("instance uniform vec3 bbox_max : instance_index(1);")
 
 	for key in vert_outputs.keys():
 		if key in active and key != "Camera" and not vert_outputs[key].is_empty():
 			globals.append("varying vec3 %s;" % vert_outputs[key])
 
-	# Vertex код
+
 	var vertex_lines := []
 
 	if "Generated" in active:
@@ -98,12 +95,14 @@ func get_code_blocks() -> Dictionary:
 			}
 		).strip_edges()
 	
-	# Fragment код
 	var fragment_lines := []
+
 	if "UV" in active:
 		fragment_lines.append("vec3 {uv} = get_uv(UV);")
 	if "Window" in active:
 		fragment_lines.append("vec3 {window} = get_window(SCREEN_UV);")
+	if "Camera" in active:
+		fragment_lines.append("vec3 {camera} = %s * ROT_Y(180.0);" % ShaderSpec.shared_var_name(ShaderSpec.SharedVar.VIEW_POS))
 	if needs_reflection_data:
 		fragment_lines.append("vec3 {reflection} = get_reflection(VIEW_MATRIX, sv_world_pos, sv_world_normal);")
 	
@@ -116,6 +115,7 @@ func get_code_blocks() -> Dictionary:
 				"module": module_name,
 				"uv": outputs.get("UV", ""),
 				"window": outputs.get("Window", ""),
+				"camera": outputs.get("Camera", ""),
 				"reflection": outputs.get("Reflection", "")
 			}
 		).strip_edges()
@@ -150,3 +150,9 @@ func get_compile_defines() -> Array[String]:
 	if "Generated" in active:
 		arr.append("NEED_AABB")
 	return arr
+
+func get_required_instance_uniforms() -> Array[int]:
+	var active: Array[String] = get_active_output_sockets()
+	if "Generated" in active:
+		return [ShaderSpec.InstanceUniform.BBOX]
+	return []

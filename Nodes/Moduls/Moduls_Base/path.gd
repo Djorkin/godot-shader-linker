@@ -3,7 +3,8 @@
 
 const INC_DIR := "res://addons/godot_shader_linker_(gsl)/Nodes/inc_shader/"
 const INC = {
-	"BLENDER_COORDS": INC_DIR + "formulas/coords.gdshaderinc",
+	"BLENDER_COORDS": INC_DIR + "formulas/coords.gdshaderinc", 
+	"COORDS": INC_DIR + "formulas/coords.gdshaderinc",
 	"PHYSICAL": INC_DIR + "formulas/physical.gdshaderinc",
 	"MATH": INC_DIR + "formulas/math.gdshaderinc",
 	"MATERIAL": INC_DIR + "formulas/struct_Material.gdshaderinc",

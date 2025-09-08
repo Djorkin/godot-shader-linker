@@ -7,12 +7,12 @@ class_name ServerStatusListener
 var udp: PacketPeerUDP
 var thread: Thread
 var running: bool = false
-@export var port: int = 6020  # UDP-порт, на котором слушаем сообщения от Blender
+@export var port: int = 6020  # UDP port to listen for Blender messages
 
 func _init(p_port: int = 6020):
 	port = p_port
 
-# Запуск фонового прослушивания UDP-порта
+# Start background UDP listening
 func start() -> void:
 	if running:
 		return
@@ -27,7 +27,7 @@ func start() -> void:
 	thread = Thread.new()
 	thread.start(Callable(self, "listen"))
 
-# Корректное завершение работы слушателя
+# Gracefully stop the listener
 func stop() -> void:
 	if not running:
 		return
@@ -41,7 +41,7 @@ func stop() -> void:
 		udp.close()
 	udp = null
 
-# Внутренний цикл получения статуса сервера
+# Internal loop to receive server status
 func listen() -> void:
 	while running:
 		while udp and udp.get_available_packet_count() > 0:

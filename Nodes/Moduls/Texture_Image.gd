@@ -35,7 +35,12 @@ func _init() -> void:
 		socket.set_parent_module(self)
 
 func get_include_files() -> Array[String]:
-	return [PATHS.INC["BLENDER_COORDS"], PATHS.INC["STRUCT_TEX_IMG"], PATHS.INC["TEX_IMAGE"],]
+	return [
+		PATHS.INC["BLENDER_COORDS"], 
+		PATHS.INC["COLOR_CONVERSIONS"], 
+		PATHS.INC["STRUCT_TEX_IMG"], 
+		PATHS.INC["TEX_IMAGE"],
+	]
 
 func get_required_shared_varyings() -> Array[int]:
 	return [ShaderSpec.SharedVar.WORLD_NORMAL]
@@ -78,7 +83,7 @@ params_{uid}.extension      = u_{uid}_extension;
 params_{uid}.color_space    = u_{uid}_color_space;
 params_{uid}.alpha_mode     = u_{uid}_alpha_mode;
 
-vec4 tex_{uid} = _sample_image(vec3(flip_uv({coord}.xy), {coord}.z), 
+vec4 tex_{uid} = _sample_image(vec3({coord}), 
 								{world_normal} * ROT_X(-90.0),
 								u_{uid}_image_texture,
 								params_{uid});

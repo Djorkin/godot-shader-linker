@@ -52,7 +52,7 @@ func build_final_chain() -> Array[ShaderModule]:
 		if not module_links.has(module.unique_id):
 			final_chain.append(module)
 	
-	print("Final chain size: ", final_chain.size())
+	#print("Final chain size: ", final_chain.size())
 	return final_chain
 
 func clear_chain(collector : Collector) -> void:

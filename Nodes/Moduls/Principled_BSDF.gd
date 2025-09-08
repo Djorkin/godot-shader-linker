@@ -65,7 +65,6 @@ func get_uniform_definitions() -> Dictionary:
 			continue
 		var def = s.to_uniform()
 
-		# Добавляем подсказки (hint) в зависимости от типа параметра
 		match s.name:
 			"Base_Color", "Specular_Tint", "Coat_Tint", "Sheen_Tint", "Emission":
 				def["hint"] = ShaderSpec.UniformHint.SOURCE_COLOR
@@ -93,7 +92,7 @@ func get_uniform_definitions() -> Dictionary:
 func get_compile_defines() -> Array[String]:
 	var defs: Array[String] = []
 
-	# Проверка Transmission первична — при наличии Transmission нужен и ALPHA_TRANSFER.
+	# Transmission check has priority — if Transmission is present, ALPHA_TRANSFER is also required.
 	var trans_socket := input_sockets[18]
 	var trans_val = uniform_overrides.get("Transmission_Weight", uniform_overrides.get("transmission_weight", trans_socket.default))
 	var has_transmission := trans_socket.source != null or float(trans_val) > 0.0
@@ -102,7 +101,7 @@ func get_compile_defines() -> Array[String]:
 		defs.append("TRANSMISSION")
 		return defs
 
-	# Иначе проверяем Alpha
+	# Otherwise check Alpha
 	var alpha_socket := input_sockets[4]
 	var alpha_val = uniform_overrides.get("Alpha", uniform_overrides.get("alpha", alpha_socket.default))
 	if alpha_socket.source != null or not is_equal_approx(float(alpha_val), 1.0):
@@ -116,14 +115,13 @@ func get_input_sockets() -> Array[InputSocket]:
 func get_code_blocks() -> Dictionary:
 	var inputs = get_input_args()
 
-	# Если вход Normal не подключён, используем встроенную NORMAL
+	# If Normal input is not connected, use built-in NORMAL
 	var normal_expr = ""
 	if input_sockets[5].source == null:
 		normal_expr = "NORMAL"
 	else:
 		normal_expr = inputs[5]
 
-	# Порядок аргументов как в bsdf_mini()
 	var args = {
 		"base_color": inputs[0],
 		"metallic": inputs[1],

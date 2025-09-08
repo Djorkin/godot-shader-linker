@@ -7,8 +7,6 @@
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
 
-
-
 #ifdef INCLUDE_WRAPPER
 
 	group_uniforms Surface_Render_Settings;
@@ -62,10 +60,6 @@
 		sheen_weight       	= max(sheen_weight, 0.0);
 		sheen_roughness    	= saturate(sheen_roughness);
 		sheen_tint         	= max(sheen_tint, vec4(0.0));
-
-
-
-
 
 		base_color = max(base_color, vec4(0.0));
 		vec4 clamped_base_color = min(base_color, vec4(1.0));
@@ -169,9 +163,8 @@
 		mat.emission += transmission;        
 		mat.metallic = final_metallic;
 		mat.normal = N;
-		mat.roughness = roughness + 0.013;
-		float spec_level = saturate(ior_to_specular_level(ior) * specular_ior_level);
-		mat.specular_level = spec_level;
+		mat.roughness = roughness + 0.013; 
+		mat.specular_level = saturate(ior_to_specular_level(ior) * specular_ior_level);
 		mat.coat_weight = coat_weight;
 		mat.coat_roughness = coat_roughness; 
 

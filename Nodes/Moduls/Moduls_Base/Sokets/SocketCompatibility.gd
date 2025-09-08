@@ -24,13 +24,13 @@ const COMPATIBLE: Dictionary = {
 	"vec3": {
 		"vec3": "{v}",
 		"vec4": "vec4({v}, 1.0)",
-		"float": "{v}.x",
+		"float": "dot(({v}), vec3(0.2126, 0.7152, 0.0722))",
 		"Material": "material_from_color(vec4({v}, 1.0))",
 	},
 	"vec4": {
 		"vec4": "{v}",
 		"vec3": "({v}).xyz",
-		"float": "{v}.x",
+		"float": "dot(({v}).rgb, vec3(0.2126, 0.7152, 0.0722))",
 		"Material": "material_from_color({v})",
 	},
 	"sampler2D": {

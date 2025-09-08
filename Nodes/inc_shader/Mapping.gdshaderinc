@@ -6,14 +6,6 @@
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
 
-
-// Режимы Mapping:
-// 0 - Point
-// 1 - Texture
-// 2 - Vector
-// 3 - Normal
-
-
 vec3 rodri_rotate(vec3 v, vec3 axis, float angle) {
     axis = normalize(axis);
     float c = cos(angle);

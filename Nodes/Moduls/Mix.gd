@@ -90,27 +90,22 @@ func get_include_files() -> Array[String]:
 
 func get_uniform_definitions() -> Dictionary:
 	var u := {}
-	# Тип данных модуля
 	u["mix_data_type"] = [ShaderSpec.ShaderType.INT, mix_data_type, ShaderSpec.UniformHint.ENUM, ["Float","Vector","Color"]]
 
 	match mix_data_type:
 		DataType.COLOR_TYPE:
-			# Основные параметры смешивания цвета
 			u["mix_blend_type"] = [ShaderSpec.ShaderType.INT, mix_blend_type, ShaderSpec.UniformHint.ENUM, ["Mix","Darken","Multiply","Color Burn","Lighten","Screen","Color Dodge","Add","Overlay","Soft Light","Linear Light","Difference","Exclusion","Subtract","Divide","Hue","Saturation","Color","Value"]]
 			u["clamp_result"] = [ShaderSpec.ShaderType.BOOL, clamp_result]
 			u["clamp_factor"] = [ShaderSpec.ShaderType.BOOL, clamp_factor]
 
 		
 		DataType.VECTOR_TYPE:
-			# Параметры смешивания векторных значений
 			u["vector_factor_mode"] = [ShaderSpec.ShaderType.INT, vector_factor_mode, ShaderSpec.UniformHint.ENUM, ["Uniform","Non-Uniform"]]
 			u["clamp_factor"] = [ShaderSpec.ShaderType.BOOL, clamp_factor]
 
 		_:
-			# FLOAT_TYPE по умолчанию
 			u["clamp_factor"] = [ShaderSpec.ShaderType.BOOL, clamp_factor]
 
-	# Добавляем uniform'ы для не подключённых входных сокетов
 	for s in get_input_sockets():
 		if s.source:
 			continue
@@ -140,7 +135,7 @@ func get_code_blocks() -> Dictionary:
 
 	match mix_data_type:
 		DataType.COLOR_TYPE:
-			# Определяем функцию смешивания цвета без runtime-switch по blend_type
+			# Determine color blend function without a runtime switch by blend_type
 			var blend_val = 0
 			var tmp_val = get_uniform_override("mix_blend_type")
 			if tmp_val == null:
@@ -167,7 +162,7 @@ vec3 mix_color_{uid}(bool use_cf, bool use_cr, float Factor, vec3 A, vec3 B) {{
 				"uid": uid,
 				"blend": blend_func,
 			})
-			blocks["global_mix_%s" % uid] = {"stage": "global", "code": func_code}
+			blocks["functions_mix_%s" % uid] = {"stage": "functions", "code": func_code}
 
 			var args_col := {
 				"uid": uid,
@@ -258,14 +253,14 @@ func set_uniform_override(name: String, value) -> void:
 			else:
 				name = "b_float"
 	
-	# Исправляем несоответствие размеров цвета (Vector3 → Vector4)
+	# Fix color size mismatch (Vector3 → Vector4)
 	if name in ["a_color", "b_color"]:
 		if typeof(value) == TYPE_VECTOR3:
 			value = Vector4(value.x, value.y, value.z, 1.0)
 		elif typeof(value) == TYPE_ARRAY and value.size() == 3:
 			value = Vector4(value[0], value[1], value[2], 1.0)
 	
-	# если переопределяем тип данных — обновляем конфигурацию сокетов
+	# If overriding the data type — update socket configuration
 	if name == "mix_data_type":
 		var new_type := int(value)
 		if new_type != mix_data_type:

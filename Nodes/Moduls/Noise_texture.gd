@@ -56,7 +56,8 @@ func _init() -> void:
 
 func get_include_files() -> Array[String]:
     return [
-        PATHS.INC["BLENDER_COORDS"],
+        PATHS.INC["COORDS"],
+        PATHS.INC["TEX_COORD"],
         PATHS.INC["STRUCT_NOISE_PARAMS"],
         PATHS.INC["BLENDER_HASH"],
         PATHS.INC["NOISE_BASE"],
@@ -103,9 +104,13 @@ func get_code_blocks() -> Dictionary:
             # No connection use generated coords through varying
             need_varying = true
             var varying_name := "gen_vec_%s" % unique_id
-            var global_decl := "varying vec3 %s;" % varying_name
-            var vertex_code := """\n // {module}: {uid} (VERTEX)
-                \n{varying} = apply_generated(blender_to_godot(VERTEX));\n""".format({
+            var global_decl := """
+varying vec3 %s;
+""" % varying_name
+            var vertex_code := """
+// {module}: {uid} (VERTEX)
+                {varying} = get_generated(VERTEX);
+""".format({
                 "module": module_name,
                 "uid": unique_id,
                 "varying": varying_name,
@@ -149,6 +154,23 @@ func get_code_blocks() -> Dictionary:
         "dim_define": dims_define,
         "fract_define": fract_define
     }
+
+    var param_lines := []
+    if dims_define == 0 or dims_define == 3:
+        param_lines.append("params_{uid}.w = {w};")
+    param_lines.append("params_{uid}.scale = {scale};")
+    param_lines.append("params_{uid}.detail = {detail};")
+    param_lines.append("params_{uid}.roughness = {roughness};")
+    param_lines.append("params_{uid}.lacunarity = {lacunarity};")
+    if fract_define in [1,2,4]:
+        param_lines.append("params_{uid}.offset = {offset};")
+    param_lines.append("params_{uid}.distortion = {distortion};")
+    if fract_define in [1,2]:
+        param_lines.append("params_{uid}.gain = {gain};")
+    if fract_define == 3:
+        param_lines.append("params_{uid}.normalize = {normalize};")
+    var params_code := "\n    ".join(param_lines).format(args)
+    args["params_code"] = params_code
 
     var base_funcs_np := [
         "noise_multi_fractal_np",
@@ -267,24 +289,7 @@ void noise_texture_{uid}(vec3 coord, NoiseParams params, out float value, out ve
         "body": body.indent("    ")
     })
 
-    blocks["global_noise_%s" % uid] = {"stage": "global", "code": func_code}
-
-    var param_lines := []
-    if dims_define == 0 or dims_define == 3:
-        param_lines.append("params_{uid}.w = {w};")
-    param_lines.append("params_{uid}.scale = {scale};")
-    param_lines.append("params_{uid}.detail = {detail};")
-    param_lines.append("params_{uid}.roughness = {roughness};")
-    param_lines.append("params_{uid}.lacunarity = {lacunarity};")
-    if fract_define in [1,2,4]:
-        param_lines.append("params_{uid}.offset = {offset};")
-    param_lines.append("params_{uid}.distortion = {distortion};")
-    if fract_define in [1,2]:
-        param_lines.append("params_{uid}.gain = {gain};")
-    if fract_define == 3:
-        param_lines.append("params_{uid}.normalize = {normalize};")
-    var params_code := "\n    ".join(param_lines).format(args)
-    args["params_code"] = params_code
+    blocks["functions_noise_%s" % uid] = {"stage": "functions", "code": func_code}
 
     var frag_template := """
 // {module}: {uid} (FRAG)
@@ -303,9 +308,15 @@ float {value_out} = value_{uid};
 
     return blocks
 
+func get_required_instance_uniforms() -> Array[int]:
+    var idx_vec := 0
+    if dimensions != DimensionType.D1 and input_sockets.size() > 0 and input_sockets[idx_vec].source == null:
+        return [ShaderSpec.InstanceUniform.BBOX]
+    return []
+
 func get_compile_defines() -> Array[String]:
     var defs: Array[String] = []
     # If the "Vector" input is not connected, add an auxiliary constant
     if input_sockets.size() > 0 and input_sockets[0].source == null:
-        defs.append("NOISE_NONE_CONNECTED")
+        defs.append("NEED_AABB")
     return defs

@@ -6,7 +6,7 @@ class_name ShaderModule
 extends Resource
 
 const PATHS = preload("res://addons/godot_shader_linker_(gsl)/Nodes/Moduls/Moduls_Base/path.gd")
-const SOCKET_COMPAT = preload("res://addons/godot_shader_linker_(gsl)/Nodes/Moduls/Moduls_Base/Sokets/SocketCompatibility.gd")
+
 
 @export_category("Module Settings")
 @export var module_name: String = "Unnamed"
@@ -65,7 +65,7 @@ func get_input_args() -> Array:
 			var source_vars = socket.source.parent_module.get_output_vars()
 			var from_type = socket.source.type_name()
 			var to_type = socket.type_name()
-			expr = SOCKET_COMPAT.convert(source_vars[socket.source.name], from_type, to_type)
+			expr = SocketCompatibility.convert(source_vars[socket.source.name], from_type, to_type)
 		else:
 			expr = get_prefixed_name(socket.name.to_lower())
 		args.append(expr)
@@ -89,10 +89,8 @@ func generate_uuid() -> String:
 func get_required_shared_varyings() -> Array[int]:
 	return []
 
-
-# TODO: delete
-func generate_code_block(stage: String, template: String, args: Dictionary) -> String:
-	return template.format(args).strip_edges()
+func get_required_instance_uniforms() -> Array[int]:
+	return []
 
 ##unused
 #func get_mark() -> String:
@@ -102,3 +100,6 @@ func generate_code_block(stage: String, template: String, args: Dictionary) -> S
 	#data += str(get_output_sockets().map(func(s): return s.name + s.type_name()))
 	#data += str(get_code_blocks())
 	#return data.sha1_text()
+
+func generate_code_block(stage: String, template: String, args: Dictionary) -> String:
+	return template.format(args).strip_edges()

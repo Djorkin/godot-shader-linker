@@ -44,6 +44,9 @@ func add_include(path: String) -> void:
 	added_includes[abs_path] = true
 	include_blocks.append('#include "%s"' % path)
 
+func normalize_braces(s: String) -> String:
+	return String(s).replace("{{", "{").replace("}}", "}")
+
 func add_uniform(type: String, name: String, default_value = null, hint = null, hint_params = null) -> void:
 	if added_uniforms.has(name):
 		return
@@ -68,6 +71,7 @@ func add_code(code: String, stage) -> void:
 		return
 
 	var stage_enum = ShaderSpec.stage_from(stage)
+	code = normalize_braces(code)
 	var key = "%s:%s" % [stage_enum, code.hash()]
 
 	if added_function_hashes.has(key):
@@ -100,16 +104,16 @@ func build_shader() -> String:
 	
 	if global_blocks:
 		parts.append("// GLOBAL")
-		parts.append("\n".join(global_blocks) + "\n")
-	
-	if include_blocks:
-		parts.append("#define INCLUDE_WRAPPER" + "\n") # только для include файлов 
-		parts.append("// INCLUDES")
-		parts.append("\n".join(include_blocks) + "\n")
+		parts.append("\n".join(global_blocks))
 	
 	if uniforms:
 		parts.append("// UNIFORMS")
-		parts.append("\n".join(uniforms) + "\n")
+		parts.append("\n".join(uniforms))
+
+	if include_blocks:
+		parts.append("#define INCLUDE_WRAPPER" + "\n") 
+		parts.append("// INCLUDES")
+		parts.append("\n".join(include_blocks) + "\n")
 	
 	if function_blocks:
 		parts.append("// FUNCTIONS")

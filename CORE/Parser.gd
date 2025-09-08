@@ -14,7 +14,7 @@ func data_transfer(data: Dictionary) -> void:
 	var Builder_inst : ShaderBuilder = Importer_inst.build_chain(data)
 	if Builder_inst:
 		builder_ready.emit(Builder_inst)
-	save_json(data) # debug only
+	#save_json(data) # debug only
 
 
 func send_request() -> void:
@@ -61,7 +61,7 @@ func _on_request_completed(result: int, response_code: int, headers: PackedStrin
 		print_rich("[color=red]Invalid JSON or response format[/color]")
 		return
 
-	# Краткий вывод: только количество нод и связей
+	# Short summary: only nodes/links count
 	if data.has("nodes") and data.has("links"):
 		var nodes = data["nodes"].size()
 		var links = data["links"].size()
@@ -77,11 +77,11 @@ func save_json(data: Dictionary) -> void:
 	var material_name := "material"
 	if data.has("material") and typeof(data["material"]) == TYPE_STRING:
 		material_name = data["material"]
-	# Приводим к безопасному имени файла
+	# Sanitize file name
 	var file_name := material_name.to_lower().replace(" ", "_") + ".json"
 	var full_path := dir_path + "/" + file_name
 
-	# Убеждаемся, что директория существует (создаём при необходимости)
+	# Ensure directory exists (create if needed)
 	var abs_dir := ProjectSettings.globalize_path(dir_path)
 	if not DirAccess.dir_exists_absolute(abs_dir):
 		var err := DirAccess.make_dir_recursive_absolute(abs_dir)

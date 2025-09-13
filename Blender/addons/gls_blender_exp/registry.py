@@ -23,6 +23,10 @@ from .handlers.normal_map_handler import handle as _handle_normal_map
 from .handlers.bump_handler import handle as _handle_bump
 from .handlers.vector_math_handler import handle as _handle_vector_math
 from .handlers.map_range_handler import handle as _handle_map_range
+from .handlers.combine_color_handler import handle as _handle_combine_color
+from .handlers.separate_color_handler import handle as _handle_separate_color
+from .handlers.combine_xyz_handler import handle as _handle_combine_xyz
+from .handlers.separate_xyz_handler import handle as _handle_separate_xyz
 
 _NodeHandler = Callable[[object, dict, dict, object], None]
 
@@ -37,6 +41,10 @@ _REGISTRY: dict[str, _NodeHandler] = {
     "ShaderNodeVectorMath": _handle_vector_math,
     "ShaderNodeMapRange": _handle_map_range,
     "ShaderNodeTexWhiteNoise": _handle_tex_white_noise,
+    "ShaderNodeCombineColor": _handle_combine_color,
+    "ShaderNodeSeparateColor": _handle_separate_color,
+    "ShaderNodeCombineXYZ": _handle_combine_xyz,
+    "ShaderNodeSeparateXYZ": _handle_separate_xyz,
 }
 
 def get_node_handler(bl_idname: str) -> Optional[_NodeHandler]:

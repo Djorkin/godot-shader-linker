@@ -29,6 +29,9 @@ func get_active_output_sockets() -> Array[String]:
 func get_uniform_definitions() -> Dictionary:
 	return {}
 
+func get_include_files() -> Array[String]:
+	return []
+
 func get_dependency() -> Array[ShaderModule]:
 	return dependencies
 

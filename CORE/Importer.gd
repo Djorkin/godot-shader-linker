@@ -23,6 +23,10 @@ var NODE_CLASSES : Dictionary = {
 		"VectorMathModule": VectorMathModule,
 		"MapRangeModule": MapRangeModule,
 		"TexWhiteNoiseModule": TexWhiteNoiseModule,
+		"CombineColorModule": CombineColorModule,
+		"SeparateColorModule": SeparateColorModule,
+		"CombineXYZModule": CombineXYZModule,
+		"SeparateXYZModule": SeparateXYZModule,
 }
 
 func instantiate_modules(data: Dictionary) -> Dictionary:

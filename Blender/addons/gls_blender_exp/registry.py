@@ -18,6 +18,7 @@ from .handlers.tex_image_handler import handle as _handle_tex_image
 from .handlers.mix_handler import handle as _handle_mix
 from .handlers.math_handler import handle as _handle_math
 from .handlers.tex_noise_handler import handle as _handle_tex_noise
+from .handlers.tex_white_noise_handler import handle as _handle_tex_white_noise
 from .handlers.normal_map_handler import handle as _handle_normal_map
 from .handlers.bump_handler import handle as _handle_bump
 from .handlers.vector_math_handler import handle as _handle_vector_math
@@ -35,6 +36,7 @@ _REGISTRY: dict[str, _NodeHandler] = {
     "ShaderNodeBump": _handle_bump,
     "ShaderNodeVectorMath": _handle_vector_math,
     "ShaderNodeMapRange": _handle_map_range,
+    "ShaderNodeTexWhiteNoise": _handle_tex_white_noise,
 }
 
 def get_node_handler(bl_idname: str) -> Optional[_NodeHandler]:

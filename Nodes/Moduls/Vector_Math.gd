@@ -243,7 +243,7 @@ func get_vec_expr(a: String, b: String, c: String) -> String:
 		Operation.WRAP:
 			return "mix((%s), (mod((%s) - (%s), max(abs((%s) - (%s)), vec3(1e-8))) + (%s)), step(vec3(1e-8), abs((%s) - (%s))))" % [c, a, c, b, c, c, b, c]
 		Operation.SNAP:
-			return "(floor((%s) / max(abs(%s), vec3(1e-8)) + vec3(0.5)) * (%s)) * step(vec3(1e-8), abs(%s))" % [a, b, b, b]
+			return "(floor((%s) / max(abs(%s), vec3(1e-8)) + vec3(0.5)) * max(abs(%s), vec3(1e-8))) * step(vec3(1e-8), abs((%s)))" % [a, b, b, b]
 		Operation.SINE:
 			return "sin(%s)" % [a]
 		Operation.COSINE:

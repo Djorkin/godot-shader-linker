@@ -131,11 +131,25 @@ def _map_range_link_index(to_node, to_socket, fallback_idx: int) -> Optional[int
         return None
 
 
+def _white_noise_link_index(to_node, to_socket, fallback_idx: int) -> Optional[int]:
+    def _visible_inputs(node) -> list:
+        try:
+            return [s for s in getattr(node, "inputs", []) if getattr(s, "enabled", True) and not getattr(s, "is_hidden", False) and not getattr(s, "hide", False)]
+        except Exception:
+            return list(getattr(node, "inputs", []))
+    vis = _visible_inputs(to_node)
+    try:
+        return vis.index(to_socket)
+    except ValueError:
+        return max(0, fallback_idx - 1)
+
+
 _REGISTRY: dict[str, _LinkAdapter] = {
     "ShaderNodeMix": _mix_link_index,
     "ShaderNodeMath": _math_link_index,
     "ShaderNodeVectorMath": _vector_math_link_index,
     "ShaderNodeMapRange": _map_range_link_index,
+    "ShaderNodeTexWhiteNoise": _white_noise_link_index,
 }
 
 

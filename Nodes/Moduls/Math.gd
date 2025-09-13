@@ -256,9 +256,9 @@ func get_expr(a: String, b: String, c: String = "0.0") -> String:
 		Operation.COMPARE:
 			return "(abs((%s) - (%s)) <= abs(%s) ? 1.0 : 0.0)" % [a, b, c]
 		Operation.SMOOTH_MINIMUM:
-			return "(min(%s, %s) - (max(abs(%s) - abs((%s) - (%s)), 0.0) * max(abs(%s) - abs((%s) - (%s)), 0.0)) / (4.0 * max(abs(%s), 1e-8)))" % [a, b, c, a, b, c, a, b, c]
+			return "(min(%s, %s) - (max(abs(%s) - abs((%s) - (%s)), 0.0) * max(abs(%s) - abs((%s) - (%s)), 0.0)) / (4.0 * max(abs(%s), 1e-8)))" % [a, b, c, a, b, c, a, b, c, a]
 		Operation.SMOOTH_MAXIMUM:
-			return "(max(%s, %s) + (max(abs(%s) - abs((%s) - (%s)), 0.0) * max(abs(%s) - abs((%s) - (%s)), 0.0)) / (4.0 * max(abs(%s), 1e-8)))" % [a, b, c, a, b, c, a, b, c]
+			return "(max(%s, %s) + (max(abs(%s) - abs((%s) - (%s)), 0.0) * max(abs(%s) - abs((%s) - (%s)), 0.0)) / (4.0 * max(abs(%s), 1e-8)))" % [a, b, c, a, b, c, a, b, c, a]
 		# Modulo / step-like
 		Operation.MODULO:
 			return "mod(%s, %s)" % [a, b]
@@ -269,7 +269,7 @@ func get_expr(a: String, b: String, c: String = "0.0") -> String:
 		Operation.WRAP:
 			return "(mod((%s) - (%s), max((%s) - (%s), 1e-8)) + (%s))" % [a, b, c, b, b]
 		Operation.SNAP:
-			return "((abs(%s) < 1e-8) ? 0.0 : (floor((%s) / (%s) + 0.5) * (%s)))" % [b, a, b, b]
+			return "((abs(%s) < 1e-8) ? 0.0 : (floor((%s) / max(abs(%s), 1e-8) + 0.5) * max(abs(%s), 1e-8)))" % [b, a, b, b]
 		Operation.PINGPONG:
 			return "((abs(%s) < 1e-8) ? 0.0 : (abs(%s) - abs(mod(%s, 2.0*abs(%s)) - abs(%s))))" % [b, b, a, b, b]
 		# Angle with two args

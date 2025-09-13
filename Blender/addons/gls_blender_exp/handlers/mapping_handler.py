@@ -1,3 +1,13 @@
+# SPDX-FileCopyrightText: 2025 D.Jorkin
+# SPDX-License-Identifier: GPL-3.0-or-later
+
+"""
+Обработчик ShaderNodeMapping для экспортера GSL.
+
+Экспортируемые функции:
+- handle(n, node_info: dict, params: dict, mat) -> None
+"""
+
 from ..utils import sanitize
 
 def handle(n, node_info: dict, params: dict, mat) -> None:

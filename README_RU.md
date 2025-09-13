@@ -10,7 +10,6 @@
 * Полная интеграция с экосистемой Godot (Inspector, WorldEnvironment/IBL, пост-процессы)
 * Анимации параметров через GDScript или `AnimationPlayer`
 
-
 ## Установка
 1. Скопируйте директорию `addons/godot_shader_linker_(gsl)` в проект Godot.  
 2. В **Project → Plugins** активируйте «Godot Shader Linker (GSL)».  
@@ -28,7 +27,6 @@
 3. В Godot появятся сгенерированные `.gdshader` / `.tres`.  
 4. Примените материал к MeshInstance и проверьте результат.
 
-
 ## Рекомендации по визуальному соответствию
 * Совместите перспективу камеры в Godot и Blender.  
 * Добавьте `WorldEnvironment`, загрузите ту же HDRI (`Sky`) и поверните на 90°.  
@@ -38,6 +36,13 @@
 ## Известные проблемы
 * **TAA** может мерцать на анимируемых/процедурных материалах. Используйте **FXAA** или уменьшайте динамику параметров.  
 * **SDFGI** работает некорректно с прозрачными материалами.
+
+## Настройки логирования
+– Настройки находятся в `Edit → Preferences → Add-ons → GSL Exporter`:
+  - `Enable debug logging` — при включении уровень DEBUG (показываются все сообщения), иначе ERROR
+  - `Log to Blender console` — вывод в консоль Blender
+  - `Log to Godot (UDP)` — отправка логов по UDP в Godot
+  - `Log UDP port` — порт для логов
 
 ## Лицензия
 

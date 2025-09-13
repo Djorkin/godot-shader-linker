@@ -1,3 +1,13 @@
+# SPDX-FileCopyrightText: 2025 D.Jorkin
+# SPDX-License-Identifier: GPL-3.0-or-later
+
+"""
+Обработчик ShaderNodeMix для экспортера GSL.
+
+Экспортируемые функции:
+- handle(n, node_info: dict, params: dict, mat) -> None
+"""
+
 def handle(n, node_info: dict, params: dict, mat) -> None:
     type_map = {"FLOAT": 0, "VECTOR": 1, "RGBA": 2, "COLOR": 2}
     params["data_type"] = type_map.get(str(getattr(n, "data_type", "RGBA")), 2)

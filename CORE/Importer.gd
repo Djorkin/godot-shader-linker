@@ -19,7 +19,9 @@ var NODE_CLASSES : Dictionary = {
 		"NormalMapModule": NormalMapModule,
 		"TexNoiseModule": NoiseTextureModule,
 		"MixModule": MixModule,
-		"MathModule": MathModule
+		"MathModule": MathModule,
+		"VectorMathModule": VectorMathModule,
+		"MapRangeModule": MapRangeModule,
 }
 
 func instantiate_modules(data: Dictionary) -> Dictionary:

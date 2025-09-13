@@ -1,3 +1,16 @@
+# SPDX-Copyright (C) 2025 D.Jorkin
+# SPDX-License-Identifier: GPL-3.0-or-later
+
+"""
+Реестр обработчиков узлов Blender для экспортера GSL.
+
+Назначение:
+- Хранить соответствие bl_idname → функция-обработчик.
+
+Экспортируемые сущности:
+- get_node_handler(bl_idname: str) -> Optional[Callable]
+"""
+
 from typing import Callable, Optional
 
 from .handlers.mapping_handler import handle as _handle_mapping
@@ -7,6 +20,8 @@ from .handlers.math_handler import handle as _handle_math
 from .handlers.tex_noise_handler import handle as _handle_tex_noise
 from .handlers.normal_map_handler import handle as _handle_normal_map
 from .handlers.bump_handler import handle as _handle_bump
+from .handlers.vector_math_handler import handle as _handle_vector_math
+from .handlers.map_range_handler import handle as _handle_map_range
 
 _NodeHandler = Callable[[object, dict, dict, object], None]
 
@@ -18,6 +33,8 @@ _REGISTRY: dict[str, _NodeHandler] = {
     "ShaderNodeTexNoise": _handle_tex_noise,
     "ShaderNodeNormalMap": _handle_normal_map,
     "ShaderNodeBump": _handle_bump,
+    "ShaderNodeVectorMath": _handle_vector_math,
+    "ShaderNodeMapRange": _handle_map_range,
 }
 
 def get_node_handler(bl_idname: str) -> Optional[_NodeHandler]:

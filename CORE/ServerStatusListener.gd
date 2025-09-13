@@ -52,7 +52,7 @@ func listen() -> void:
 				continue
 			match obj["status"]:
 				"started":
-					print_rich("[color=green]Blender server started[/color]")
+					print_rich("[color=green]Blender server listen[/color]")
 				"stopped":
-					print_rich("[color=yellow]Blender server stopped[/color]")
+					print_rich("[color=red]Blender server stopped[/color]")
 		OS.delay_msec(100)

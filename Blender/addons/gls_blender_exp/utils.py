@@ -1,46 +1,40 @@
+# SPDX-FileCopyrightText: 2025 D.Jorkin
+# SPDX-License-Identifier: GPL-3.0-or-later
+
+"""
+Утилиты общего назначения для экспортера GSL.
+
+Экспортируемые функции:
+- sanitize(text: str) -> str
+- make_node_id(name: str, idx: int) -> str
+- bl_to_gsl_class(bl_id: str) -> str
+"""
+
 import re
-import os
 
-try:
-    import bpy  # type: ignore
-except Exception:
-    bpy = None  # type: ignore
-
-TEXTURE_DIR_NAME = "GSL_Texture"
 
 def sanitize(text: str) -> str:
+    """
+    Приводит текст к безопасному для идентификаторов виду: заменяет пробелы/точки на подчёркивания
+    и убирает прочие недопустимые символы.
+    """
     text = text.replace(" ", "_").replace(".", "_")
     return re.sub(r"[^0-9A-Za-z_]+", "_", text)
 
+
 def make_node_id(name: str, idx: int) -> str:
+    """
+    Формирует детерминированный идентификатор узла вида: <sanitized_name>_NNN
+    """
     return f"{sanitize(name)}_{idx:03d}"
 
+
 def bl_to_gsl_class(bl_id: str) -> str:
+    """
+    Преобразует имя класса Blender (например, ShaderNodeMath) в имя модуля GSL (MathModule).
+    """
     if bl_id.startswith("ShaderNode"):
         core = bl_id[len("ShaderNode"):]
     else:
         core = bl_id
     return f"{core}Module"
-
-def get_export_base_dir() -> str:
-    # 1) attempt to read value defined in net_server.EXPORT_BASE_DIR
-    try:
-        from . import net_server  # lazy import to avoid circular at module load
-        if getattr(net_server, "EXPORT_BASE_DIR", ""):
-            return net_server.EXPORT_BASE_DIR  # type: ignore[attr-defined]
-    except Exception:
-        pass
-
-    # 2) addon preferences
-    try:
-        if bpy is None:
-            return ""
-        for ad_name, ad in bpy.context.preferences.addons.items():
-            prefs = getattr(ad, "preferences", None)
-            if prefs and hasattr(prefs, "godot_project_path"):
-                return prefs.godot_project_path
-    except Exception:
-        pass
-
-    # 3) fallback: disabled copying
-    return ""

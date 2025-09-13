@@ -67,7 +67,7 @@ func get_input_args() -> Array:
 			var to_type = socket.type_name()
 			expr = SocketCompatibility.convert(source_vars[socket.source.name], from_type, to_type)
 		else:
-			expr = get_prefixed_name(socket.name.to_lower())
+			expr = get_prefixed_name(socket.name.to_lower().replace(" ", "_"))
 		args.append(expr)
 	return args
 

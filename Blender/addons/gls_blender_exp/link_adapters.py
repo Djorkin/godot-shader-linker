@@ -1,4 +1,22 @@
-from typing import Callable, Optional, Union
+# SPDX-FileCopyrightText: 2025 D.Jorkin
+# SPDX-License-Identifier: GPL-3.0-or-later
+
+"""
+Адаптеры связей: корректируют индексы входов с учётом арности операций узлов.
+
+Назначение:
+- Обеспечить согласование индексов сокетов Blender и экспортного формата.
+
+Экспортируемые сущности:
+- get_link_adapter(bl_idname: str) -> Optional[Callable]
+"""
+"""
+Адаптеры связей: приводят индексы сокетов Blender к индексам экспорта с учётом арности операции узла.
+Контракт: (to_node, to_socket, fallback_idx) -> Optional[int]
+Верните None, чтобы пропустить связь (например, сокет скрыт/неактивен для текущей операции).
+"""
+from typing import Callable, Optional
+
 
 _LinkAdapter = Callable[[object, object, int], Optional[int]]
 
@@ -38,9 +56,86 @@ def _math_link_index(to_node, to_socket, fallback_idx: int) -> Optional[int]:
     return target_pos
 
 
+def _vector_math_link_index(to_node, to_socket, fallback_idx: int) -> Optional[int]:
+    try:
+        op_val = str(getattr(to_node, "operation", "ADD")).upper().replace(" ", "_")
+    except Exception:
+        op_val = "ADD"
+    # Группировка операций по арности
+    unary_ops = {
+        "NORMALIZE","LENGTH","ABSOLUTE","SIGN","FLOOR","CEIL","FRACTION",
+        "SINE","COSINE","TANGENT"
+    }
+    ternary_ops = {"MULTIPLY_ADD", "REFRACT", "FACEFORWARD", "WRAP"}
+    need_inputs = 3 if op_val in ternary_ops else (1 if op_val in unary_ops else 2)
+
+    all_inputs = list(getattr(to_node, "inputs", []))
+    try:
+        target_pos = all_inputs.index(to_socket)
+    except ValueError:
+        target_pos = 0
+    return target_pos if target_pos < need_inputs else None
+
+
+def _map_range_link_index(to_node, to_socket, fallback_idx: int) -> Optional[int]:
+    def _visible_inputs(node) -> list[str]:
+        names: list[str] = []
+        try:
+            for s in getattr(node, "inputs", []):
+                if getattr(s, "enabled", True) is False:
+                    continue
+                if getattr(s, "is_hidden", False) is True:
+                    continue
+                if getattr(s, "hide", False) is True:
+                    continue
+                names.append(str(getattr(s, "name", "")))
+        except Exception:
+            names = []
+        return names
+
+    names = _visible_inputs(to_node)
+
+    if not names:
+        # Fallback: построить по data_type с учётом int/str и режима
+        def _dt_index(attr) -> int:
+            try:
+                if isinstance(attr, int):
+                    return 1 if attr != 0 else 0
+                s = str(attr).upper()
+                return 1 if "VECTOR" in s else 0
+            except Exception:
+                return 0
+        dt = _dt_index(getattr(to_node, "data_type", 0))
+        names = [
+            "Vector", "From Min", "From Max", "To Min", "To Max"
+        ] if dt == 1 else [
+            "Value", "From Min", "From Max", "To Min", "To Max"
+        ]
+        try:
+            mode_raw = getattr(to_node, "interpolation_type", None)
+            if mode_raw is None:
+                mode_raw = getattr(to_node, "interpolation", "LINEAR")
+            if str(mode_raw).upper() == "STEPPED":
+                names.append("Steps")
+        except Exception:
+            pass
+
+    try:
+        name = str(getattr(to_socket, "name", ""))
+    except Exception:
+        name = ""
+
+    try:
+        return names.index(name)
+    except ValueError:
+        return None
+
+
 _REGISTRY: dict[str, _LinkAdapter] = {
     "ShaderNodeMix": _mix_link_index,
     "ShaderNodeMath": _math_link_index,
+    "ShaderNodeVectorMath": _vector_math_link_index,
+    "ShaderNodeMapRange": _map_range_link_index,
 }
 
 

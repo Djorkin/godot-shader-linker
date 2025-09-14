@@ -1,9 +1,11 @@
 /* SPDX-FileCopyrightText: 2025 D.Jorkin
  *
- * Inspired by Blender’s mapping node:
- * https://github.com/blender/blender/blob/main/source/blender/gpu/shaders/material/gpu_shader_material_mapping.glsl
- *
  * SPDX-License-Identifier: GPL-3.0-or-later
+ *
+ * Portions adapted from Blender’s Mapping node:
+ *  - source/blender/gpu/shaders/material/gpu_shader_material_mapping.glsl
+ *    https://github.com/blender/blender/blob/main/source/blender/gpu/shaders/material/gpu_shader_material_mapping.glsl
+ * Copyright (c) Blender Authors, licensed under GPL-2.0-or-later.
  */
 
 vec3 rodri_rotate(vec3 v, vec3 axis, float angle) {

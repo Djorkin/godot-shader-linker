@@ -1,10 +1,10 @@
-/* SPDX-FileCopyrightText: 2011-2022 Blender Foundation
- * SPDX-FileCopyrightText: 2025 D.Jorkin
- *
- * Port of Cycles utility:
- *   node_color.h
+/* SPDX-FileCopyrightText: 2025 D.Jorkin
  *
  * SPDX-License-Identifier: GPL-3.0-or-later
+ *
+ * Portions adapted from Blender Cycles utility:
+ *   node_color.h
+ * Copyright (c) Blender Foundation/Authors, licensed under GPL-2.0-or-later.
  */
 
 float color_srgb_to_scene_linear(float c) {
@@ -134,17 +134,23 @@ vec3 rgb_to_hsl(vec3 rgb) {
 
 
 vec3 hsl_to_rgb(vec3 hsl) {
-    float h = fract(hsl.x);
+    float h = hsl.x;
     float s = hsl.y;
     float l = hsl.z;
 
-    float chroma = (1.0 - abs(2.0 * l - 1.0)) * s;
-    float m = l - 0.5 * chroma;
-    vec3 p;
-    p.x = abs(fract(h * 6.0 + 0.0) - 3.0) - 1.0;
-    p.y = abs(fract(h * 6.0 + 4.0) - 3.0) - 1.0;
-    p.z = abs(fract(h * 6.0 + 2.0) - 3.0) - 1.0;
+    float nr = abs(h * 6.0 - 3.0) - 1.0;
+    float ng = 2.0 - abs(h * 6.0 - 2.0);
+    float nb = 2.0 - abs(h * 6.0 - 4.0);
 
-    p = clamp(p, 0.0, 1.0);
-    return p * chroma + vec3(m);
+    nr = clamp(nr, 0.0, 1.0);
+    ng = clamp(ng, 0.0, 1.0);
+    nb = clamp(nb, 0.0, 1.0);
+
+    float chroma = (1.0 - abs(2.0 * l - 1.0)) * s;
+
+    return vec3(
+        (nr - 0.5) * chroma + l,
+        (ng - 0.5) * chroma + l,
+        (nb - 0.5) * chroma + l
+    );
 }

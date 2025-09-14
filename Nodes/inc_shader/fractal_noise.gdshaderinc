@@ -1,11 +1,9 @@
-/* SPDX-FileCopyrightText: 2019-2022 Blender Authors
- * SPDX-FileCopyrightText: 2025 D.Jorkin
- *
- * Adapted from Blender:
- *  - gpu_shader_material_fractal_noise.glsl
- *    https://raw.githubusercontent.com/blender/blender/main/source/blender/gpu/shaders/material/gpu_shader_material_fractal_noise.glsl
+/* SPDX-FileCopyrightText: 2025 D.Jorkin
  *
  * SPDX-License-Identifier: GPL-3.0-or-later
+ *
+ * Portions adapted from Blender noise shaders and utilities.
+ * Copyright (c) Blender Authors, licensed under GPL-2.0-or-later.
  */
 
 #ifdef INCLUDE_WRAPPER

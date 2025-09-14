@@ -1,10 +1,11 @@
-/* SPDX-FileCopyrightText: 2019-2023 Blender Authors
- * SPDX-FileCopyrightText: 2025 D.Jorkin
- *
- * Adapted from Blender's gpu_shader_material_tex_image.glsl
- * https://raw.githubusercontent.com/blender/blender/main/source/blender/gpu/shaders/material/gpu_shader_material_tex_image.glsl
+/* SPDX-FileCopyrightText: 2025 D.Jorkin
  *
  * SPDX-License-Identifier: GPL-3.0-or-later
+ *
+ * Portions adapted from Blender's Image Texture shader:
+ *  - source/blender/gpu/shaders/material/gpu_shader_material_tex_image.glsl
+ *    https://raw.githubusercontent.com/blender/blender/main/source/blender/gpu/shaders/material/gpu_shader_material_tex_image.glsl
+ * Copyright (c) Blender Authors, licensed under GPL-2.0-or-later.
  */
 
 // В будущем этот файл будет рефакторен для избавления от ветвления в шейдере.

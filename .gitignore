@@ -39,6 +39,7 @@ override.cfg
 .cache/
 *.log
 *.txt
+Blender/addons/gls_blender_exp/handlers/__pycache__
 Blender/addons/gls_blender_exp/__pycache__
 
 # Исключения (не игнорировать основные файлы проекта)

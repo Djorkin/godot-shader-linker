@@ -1,8 +1,24 @@
+# SPDX-FileCopyrightText: 2025 D.Jorkin
+# SPDX-License-Identifier: GPL-3.0-or-later
+
+"""
+GSL Exporter — точка входа аддона Blender.
+
+Назначение:
+- Регистрация классов настроек и панели UI.
+- Запуск/остановка фонового HTTP/UDP‑сервера при включении/выключении аддона.
+- Применение настроек логирования и обработка завершения Blender.
+
+Экспортируемые сущности:
+- Классы: GSLAddonPreferences, GSL_PT_settings.
+- Функции: register(), unregister().
+"""
+
 bl_info = {
     "name": "GSL Exporter",
     "author": "D.Jorkin",
-    "version": (1, 0, 0),
-    "blender": (3, 0, 0),
+    "version": (0, 2, 0),
+    "blender": (4, 0, 0),
     "location": "Preferences > Add-ons",
     "description": "",
     "category": "Import-Export",
@@ -10,14 +26,20 @@ bl_info = {
 
 import bpy
 from bpy.types import AddonPreferences, Panel
-from bpy.props import StringProperty
+from bpy.props import StringProperty, BoolProperty, IntProperty
 import json, os
 import bpy.app.handlers as _h
 import atexit
 
+def _on_logging_prefs_update(self, context):
+    try:
+        from .logger import get_logger as _get_logger
+        _get_logger(reconfigure=True)
+    except Exception:
+        pass
+
 class GSLAddonPreferences(AddonPreferences):
     bl_idname = __name__
-
 
     godot_project_path: StringProperty(
         name="Path to Godot project",
@@ -26,9 +48,42 @@ class GSLAddonPreferences(AddonPreferences):
         default=""
     )
 
+    # Logging preferences
+    debug_logging: BoolProperty(
+        name="Enable debug logging",
+        description="When enabled, logger uses DEBUG level; otherwise ERROR",
+        default=False,
+        update=_on_logging_prefs_update,
+    )
+    log_to_console: BoolProperty(
+        name="Log to Blender console",
+        default=True,
+        update=_on_logging_prefs_update,
+    )
+    log_to_godot: BoolProperty(
+        name="Log to Godot (UDP)",
+        default=True,
+        update=_on_logging_prefs_update,
+    )
+    log_udp_port: IntProperty(
+        name="Log UDP port",
+        default=6021,
+        min=1,
+        max=65535,
+        update=_on_logging_prefs_update,
+    )
+
     def draw(self, context):
         layout = self.layout
         layout.prop(self, "godot_project_path")
+        layout.separator()
+        box = layout.box()
+        box.label(text="Logging")
+        col = box.column(align=True)
+        col.prop(self, "debug_logging")
+        col.prop(self, "log_to_console")
+        col.prop(self, "log_to_godot")
+        col.prop(self, "log_udp_port")
 
 class GSL_PT_settings(Panel):
     """Панель настроек GSL в контексте материала"""
@@ -68,6 +123,18 @@ def register():
         net_server.launch_server()
     except Exception as e:
         print(f"[GSL Exporter] Failed to start HTTP server: {e}")
+        try:
+            from .logger import get_logger as _get_logger
+            _get_logger().getChild("addon").error(f"Failed to start HTTP server: {e}")
+        except Exception:
+            pass
+
+    # Configure logger with current preferences
+    try:
+        from .logger import get_logger as _get_logger
+        _get_logger(reconfigure=True)
+    except Exception:
+        pass
 
     # Регистрируем обработчик выхода Blender (разные версии API)
     if hasattr(_h, "quit_pre"):
@@ -89,4 +156,3 @@ def unregister():
 
     for cls in reversed(classes):
         bpy.utils.unregister_class(cls)
-

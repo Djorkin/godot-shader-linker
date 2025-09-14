@@ -24,7 +24,7 @@ const COMPATIBLE: Dictionary = {
 	"vec3": {
 		"vec3": "{v}",
 		"vec4": "vec4({v}, 1.0)",
-		"float": "dot(({v}), vec3(0.2126, 0.7152, 0.0722))",
+		"float": "({v}).x",
 		"Material": "material_from_color(vec4({v}, 1.0))",
 	},
 	"vec4": {
@@ -47,6 +47,13 @@ static func is_compatible(from_type: String, to_type: String) -> bool:
 static func convert(expr: String, from_type: String, to_type: String) -> String:
 	if from_type == to_type:
 		return expr
+	if from_type == "vec2" and to_type == "float":
+		return "((%s).x + (%s).y) / 2.0" % [expr, expr]
+	if from_type == "vec3" and to_type == "float":
+		var lower := expr.to_lower()
+		if lower.find("color") != -1 or lower.find(".rgb") != -1 or lower.find("albedo") != -1:
+			return "dot((%s), vec3(0.2126, 0.7152, 0.0722))" % expr
+		return "((%s).x + (%s).y + (%s).z) / 3.0" % [expr, expr, expr]
 	if not is_compatible(from_type, to_type):
 		return expr
 	return COMPATIBLE[from_type][to_type].format({"v": expr})

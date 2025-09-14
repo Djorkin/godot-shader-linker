@@ -51,7 +51,7 @@ func _init() -> void:
 
 
 func get_include_files() -> Array[String]:
-	return [PATHS.INC["PHYSICAL"], PATHS.INC["MATH"], PATHS.INC["MATERIAL"], PATHS.INC["BSDF_PRINCILED"]]
+	return [PATHS.INC["PHYSICAL"], PATHS.INC["MATH"], PATHS.INC["MATERIAL"], PATHS.INC["BSDF_PRINCIPLED"]]
 
 
 func get_uniform_definitions() -> Dictionary:

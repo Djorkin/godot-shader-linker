@@ -1,10 +1,11 @@
-/* SPDX-FileCopyrightText: 2019-2023 Blender Authors
- * SPDX-FileCopyrightText: 2025 D.Jorkin
- *
- * Adapted from Blender’s Principled BSDF implementation:
- * https://github.com/blender/blender/blob/main/source/blender/gpu/shaders/material/gpu_shader_material_principled.glsl
+/* SPDX-FileCopyrightText: 2025 D.Jorkin
  *
  * SPDX-License-Identifier: GPL-3.0-or-later
+ *
+ * Portions adapted from Blender GPU shaders to ensure behavior parity:
+ *  - source/blender/gpu/shaders/material/gpu_shader_material_principled.glsl
+ *    https://github.com/blender/blender/blob/main/source/blender/gpu/shaders/material/gpu_shader_material_principled.glsl
+ * Copyright (c) Blender Authors, licensed under GPL-2.0-or-later.
  */
 
 #ifdef INCLUDE_WRAPPER

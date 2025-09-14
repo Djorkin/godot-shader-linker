@@ -119,14 +119,14 @@ func bind_available_textures_and_collect_waiting(material: ShaderMaterial, build
 			var tex := load(res_path) as Texture2D
 			if tex:
 				material.set_shader_parameter(uname, tex)
-				print_rich("[color=green]GSL[/color] Bound %s ← %s" % [uname, res_path])
+				#print_rich("[color=green]GSL[/color] Bound %s ← %s" % [uname, res_path])
 			else:
 				push_warning("Failed to load Texture2D: %s" % res_path)
 		else:
 			waiting_uniform_textures[uname] = res_path
 			waiting += 1
-			print_rich("[color=yellow]GSL[/color] Awaiting import: %s" % res_path)
-	print_rich("[color=yellow]GSL[/color] Bound: %d, pending: %d" % [bound, waiting])
+			#print_rich("[color=yellow]GSL[/color] Awaiting import: %s" % res_path)
+	#print_rich("[color=yellow]GSL[/color] Bound: %d, pending: %d" % [bound, waiting])
 	return waiting_uniform_textures.is_empty()
 
 func subscribe_fs_signals_once() -> void:

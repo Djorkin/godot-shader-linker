@@ -209,11 +209,11 @@ func get_expr(a: String, b: String, c: String = "0.0") -> String:
 		Operation.MULTIPLY:
 			return "(%s * %s)" % [a, b]
 		Operation.DIVIDE:
-			return "(%s / %s)" % [a, b]
+			return "safe_divide(%s, %s)" % [a, b]
 		Operation.MULTIPLY_ADD:
 			return "((%s * %s) + %s)" % [a, b, c]
 		Operation.POWER:
-			return "pow(%s, %s)" % [a, b]
+			return "compatible_pow(%s, %s)" % [a, b]
 		Operation.LOGARITHM:
 			return "log(max(%s, 1e-8))" % [a]
 		Operation.SQRT:
@@ -261,15 +261,15 @@ func get_expr(a: String, b: String, c: String = "0.0") -> String:
 			return "(max(%s, %s) + (max(abs(%s) - abs((%s) - (%s)), 0.0) * max(abs(%s) - abs((%s) - (%s)), 0.0)) / (4.0 * max(abs(%s), 1e-8)))" % [a, b, c, a, b, c, a, b, c, a]
 		# Modulo / step-like
 		Operation.MODULO:
-			return "mod(%s, %s)" % [a, b]
+			return "compatible_mod(%s, %s)" % [a, b]
 		Operation.TRUNCATED_MODULO:
 			return "((%s) - (%s) * trunc((%s)/max(%s, 1e-8)))" % [a, b, a, b]
 		Operation.FLOORED_MODULO:
 			return "((%s) - (%s) * floor((%s)/max(%s, 1e-8)))" % [a, b, a, b]
 		Operation.WRAP:
-			return "(mod((%s) - (%s), max((%s) - (%s), 1e-8)) + (%s))" % [a, b, c, b, b]
+			return "wrap((%s), (%s), (%s))" % [a, b, c]
 		Operation.SNAP:
-			return "((abs(%s) < 1e-8) ? 0.0 : (floor((%s) / max(abs(%s), 1e-8) + 0.5) * max(abs(%s), 1e-8)))" % [b, a, b, b]
+			return "((abs(%s) < 1e-8) ? 0.0 : (floor(safe_divide((%s), (%s))) * (%s)))" % [b, a, b, b]
 		Operation.PINGPONG:
 			return "((abs(%s) < 1e-8) ? 0.0 : (abs(%s) - abs(mod(%s, 2.0*abs(%s)) - abs(%s))))" % [b, b, a, b, b]
 		# Angle with two args

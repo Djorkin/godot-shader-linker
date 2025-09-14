@@ -23,5 +23,6 @@ const INC = {
 	"NOISE_TEXTURE": INC_DIR + "noise_texture.gdshaderinc",
     "COLOR_CONVERSIONS": INC_DIR + "color_conversions.gdshaderinc",
     "MIX_MODES": INC_DIR + "mix_modes.gdshaderinc",
-	"MIX_FUNCTIONS": INC_DIR + "mix_functions.gdshaderinc",
+ 	"MIX_FUNCTIONS": INC_DIR + "mix_functions.gdshaderinc",
+ 	"COLOR_RAMP": INC_DIR + "color_ramp.gdshaderinc",
 }

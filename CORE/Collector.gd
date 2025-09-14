@@ -81,7 +81,7 @@ func configure_includes(builder: ShaderBuilder, modules: Array) -> void:
 		for inc in module.get_include_files():
 			builder.add_include(inc)
 
-
+# need to reconsider this
 #region Evaluation functions
 
 func configure_eval_functions(builder: ShaderBuilder, modules: Array) -> void:

@@ -27,6 +27,7 @@ from .handlers.combine_color_handler import handle as _handle_combine_color
 from .handlers.separate_color_handler import handle as _handle_separate_color
 from .handlers.combine_xyz_handler import handle as _handle_combine_xyz
 from .handlers.separate_xyz_handler import handle as _handle_separate_xyz
+from .handlers.color_ramp_handler import handle as _handle_color_ramp
 
 _NodeHandler = Callable[[object, dict, dict, object], None]
 
@@ -45,6 +46,7 @@ _REGISTRY: dict[str, _NodeHandler] = {
     "ShaderNodeSeparateColor": _handle_separate_color,
     "ShaderNodeCombineXYZ": _handle_combine_xyz,
     "ShaderNodeSeparateXYZ": _handle_separate_xyz,
+    "ShaderNodeValToRGB": _handle_color_ramp,
 }
 
 def get_node_handler(bl_idname: str) -> Optional[_NodeHandler]:

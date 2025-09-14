@@ -113,6 +113,7 @@ func configure_input_sockets() -> void:
 		Operation.CROSS_PRODUCT,
 		Operation.PROJECT,
 		Operation.REFLECT,
+		Operation.REFRACT,
 		Operation.DOT_PRODUCT,
 		Operation.DISTANCE,
 		Operation.MINIMUM,
@@ -205,7 +206,7 @@ func get_vec_expr(a: String, b: String, c: String) -> String:
 		Operation.MULTIPLY:
 			return "((%s) * (%s))" % [a, b]
 		Operation.DIVIDE:
-			return "((%s) / max(abs(%s), vec3(1e-8)))" % [a, b]
+			return "safe_divide((%s), (%s))" % [a, b]
 		Operation.MULTIPLY_ADD:
 			return "((%s) * (%s) + (%s))" % [a, b, c]
 		Operation.CROSS_PRODUCT:
@@ -213,19 +214,19 @@ func get_vec_expr(a: String, b: String, c: String) -> String:
 		Operation.PROJECT:
 			return "((dot(%s,%s) / max(dot(%s,%s), 1e-8)) * (%s))" % [a, b, b, b, b]
 		Operation.REFLECT:
-			return "reflect((%s), normalize(%s))" % [a, b]
+			return "reflect((%s), safe_normalize(%s))" % [a, b]
 		Operation.REFRACT:
-			return "refract((%s), normalize(%s), (%s))" % [a, b, c]
+			return "refract((%s), safe_normalize(%s), (%s))" % [a, b, c]
 		Operation.FACEFORWARD:
 			return "faceforward((%s), (%s), (%s))" % [a, b, c]
 		Operation.SCALE:
 			return "((%s) * vec3(%s))" % [a, b]
 		Operation.NORMALIZE:
-			return "normalize(%s)" % [a]
+			return "safe_normalize(%s)" % [a]
 		Operation.ABSOLUTE:
 			return "abs(%s)" % [a]
 		Operation.POWER:
-			return "pow((%s), (%s))" % [a, b]
+			return "compatible_pow((%s), (%s))" % [a, b]
 		Operation.SIGN:
 			return "sign(%s)" % [a]
 		Operation.MINIMUM:
@@ -239,11 +240,11 @@ func get_vec_expr(a: String, b: String, c: String) -> String:
 		Operation.FRACTION:
 			return "fract(%s)" % [a]
 		Operation.MODULO:
-			return "mod((%s), max(abs(%s), vec3(1e-8)))" % [a, b]
+			return "compatible_mod((%s), (%s))" % [a, b]
 		Operation.WRAP:
-			return "mix((%s), (mod((%s) - (%s), max(abs((%s) - (%s)), vec3(1e-8))) + (%s)), step(vec3(1e-8), abs((%s) - (%s))))" % [c, a, c, b, c, c, b, c]
+			return "wrap((%s), (%s), (%s))" % [a, b, c]
 		Operation.SNAP:
-			return "(floor((%s) / max(abs(%s), vec3(1e-8)) + vec3(0.5)) * max(abs(%s), vec3(1e-8))) * step(vec3(1e-8), abs((%s)))" % [a, b, b, b]
+			return "(floor(safe_divide((%s), (%s))) * (%s))" % [a, b, b]
 		Operation.SINE:
 			return "sin(%s)" % [a]
 		Operation.COSINE:
@@ -287,7 +288,25 @@ func get_input_args() -> Array:
 func set_uniform_override(name: String, value) -> void:
 	if name == "operation":
 		var new_op := int(value)
-		if new_op != operation:
+		var op_changed := new_op != operation
+		if op_changed:
 			operation = new_op
 			configure_input_sockets()
+		# Пересинхронизируем уже записанные значения под типы текущей операции
+		var b_val = get_uniform_override("b")
+		var c_val = get_uniform_override("c")
+		if operation == Operation.SCALE and b_val != null:
+			super.set_uniform_override("b", float(b_val))
+		if operation == Operation.REFRACT and c_val != null:
+			super.set_uniform_override("c", float(c_val))
+		# Важно: сохранить operation в overrides именно как int
+		super.set_uniform_override(name, new_op)
+		return
+	# Нормализуем тип прямо при установке
+	if name == "b" and int(operation) == Operation.SCALE:
+		super.set_uniform_override(name, float(value))
+		return
+	if name == "c" and int(operation) == Operation.REFRACT:
+		super.set_uniform_override(name, float(value))
+		return
 	super.set_uniform_override(name, value)

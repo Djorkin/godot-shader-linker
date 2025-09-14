@@ -27,6 +27,7 @@ var NODE_CLASSES : Dictionary = {
 		"SeparateColorModule": SeparateColorModule,
 		"CombineXYZModule": CombineXYZModule,
 		"SeparateXYZModule": SeparateXYZModule,
+		"ColorRampModule": ColorRampModule,
 }
 
 func instantiate_modules(data: Dictionary) -> Dictionary:
@@ -60,6 +61,12 @@ func add_modules_to_mapper(node_table: Dictionary, data: Dictionary) -> void:
 				if params.has("image_path") and typeof(params["image_path"]) == TYPE_STRING:
 					var uniform_name = module.get_prefixed_name("image_texture")
 					Builder_inst.uniform_resources[uniform_name] = params["image_path"]
+			# Special handling for ColorRampModule LUT resource
+			if module is ColorRampModule and node_dict.has("params"):
+				var params_cr: Dictionary = node_dict["params"]
+				if params_cr.has("image_path") and typeof(params_cr["image_path"]) == TYPE_STRING:
+					var lut_uniform = module.get_prefixed_name("colormap")
+					Builder_inst.uniform_resources[lut_uniform] = params_cr["image_path"]
 		Mapper_inst.add_module(module)
 
 func register_in_collector() -> void:

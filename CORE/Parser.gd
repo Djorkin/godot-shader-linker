@@ -14,7 +14,7 @@ func data_transfer(data: Dictionary) -> void:
 	var Builder_inst : ShaderBuilder = Importer_inst.build_chain(data)
 	if Builder_inst:
 		builder_ready.emit(Builder_inst)
-	save_json(data) # debug only
+	#save_json(data) # debug only
 
 
 func send_request() -> void:

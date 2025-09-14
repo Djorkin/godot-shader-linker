@@ -1,10 +1,11 @@
-/* SPDX-FileCopyrightText: 2019-2023 Blender Authors
- * SPDX-FileCopyrightText: 2025 D.Jorkin
- *
- * Adapted from Blender’s bump node:
- * https://raw.githubusercontent.com/blender/blender/refs/heads/main/source/blender/gpu/shaders/material/gpu_shader_material_bump.glsl
+/* SPDX-FileCopyrightText: 2025 D.Jorkin
  *
  * SPDX-License-Identifier: GPL-3.0-or-later
+ *
+ * Portions adapted from Blender’s bump node:
+ *  - source/blender/gpu/shaders/material/gpu_shader_material_bump.glsl
+ *    https://raw.githubusercontent.com/blender/blender/refs/heads/main/source/blender/gpu/shaders/material/gpu_shader_material_bump.glsl
+ * Copyright (c) Blender Authors, licensed under GPL-2.0-or-later.
  */
 
 

@@ -1,10 +1,10 @@
-/* SPDX-FileCopyrightText: 2011-2022 Blender Foundation
- * SPDX-FileCopyrightText: 2025 D.Jorkin
- *
- * Port of Cycles utility:
- *   node_color.h
+/* SPDX-FileCopyrightText: 2025 D.Jorkin
  *
  * SPDX-License-Identifier: GPL-3.0-or-later
+ *
+ * Portions adapted from Blender Cycles utility:
+ *   node_color.h
+ * Copyright (c) Blender Foundation/Authors, licensed under GPL-2.0-or-later.
  */
 
 float color_srgb_to_scene_linear(float c) {

@@ -5,7 +5,6 @@
 class_name TextureImageModule
 extends ShaderModule
 
-# Перечисления для параметров
 enum InterpolationType { LINEAR, CLOSEST, CUBIC }
 enum ProjectionType { FLAT, BOX, SPHERE, TUBE }
 enum ExtensionType { REPEAT, EXTEND, CLIP, MIRROR }
@@ -23,44 +22,46 @@ func _init() -> void:
 	super._init()
 	module_name = "Texture Image"
 
-	_input_sockets = [
+	input_sockets = [
 		InputSocket.new("Vector", InputSocket.SocketType.VEC3, Vector3.ZERO)
 	]
 
-	_output_sockets = [
+	output_sockets = [
 		OutputSocket.new("Color", OutputSocket.SocketType.VEC4),
 		OutputSocket.new("Alpha", OutputSocket.SocketType.FLOAT)
 	]
 
-	for socket in _output_sockets:
+	for socket in output_sockets:
 		socket.set_parent_module(self)
 
 func get_include_files() -> Array[String]:
-	return [PATHS.INC["BLENDER_COORDS"], PATHS.INC["STRUCT_TEX_IMG"], PATHS.INC["TEX_IMAGE"],]
+	return [
+		PATHS.INC["BLENDER_COORDS"], 
+		PATHS.INC["COLOR_CONVERSIONS"], 
+		PATHS.INC["STRUCT_TEX_IMG"], 
+		PATHS.INC["TEX_IMAGE"],
+	]
 
-func get_input_sockets() -> Array[InputSocket]:
-	return _input_sockets
-
-func get_output_sockets() -> Array[OutputSocket]:
-	return _output_sockets
+func get_required_shared_varyings() -> Array[int]:
+	return [ShaderSpec.SharedVar.WORLD_NORMAL]
 
 func get_uniform_definitions() -> Dictionary:
 	return {
-		"image_texture": {"type":"sampler2D"},
-		"interpolation": {"type":"int", "default":interpolation, "hint":"hint_enum(\"Linear\",\"Closest\",\"Cubic\")"},
-		"projection": {"type":"int", "default":projection, "hint":"hint_enum(\"Flat\",\"Box\",\"Sphere\",\"Tube\")"},
-		"box_blend": {"type":"float", "default":box_blend, "hint":"hint_range(0,1,0.01)"},
-		"extension": {"type":"int", "default":extension, "hint":"hint_enum(\"Repeat\",\"Extend\",\"Clip\",\"Mirror\")"},
-		"color_space": {"type":"int", "default":color_space, "hint":"hint_enum(\"sRGB\",\"Non-Color\")"},
-		"alpha_mode": {"type":"int", "default":alpha_mode, "hint":"hint_enum(\"Straight\",\"Premultiplied\",\"ChannelPacked\",\"None\")"},
+		"image_texture": [ShaderSpec.ShaderType.SAMPLER2D, null],
+		"interpolation": [ShaderSpec.ShaderType.INT, interpolation, ShaderSpec.UniformHint.ENUM, ["Linear","Closest","Cubic"]],
+		"projection": [ShaderSpec.ShaderType.INT, projection, ShaderSpec.UniformHint.ENUM, ["Flat","Box","Sphere","Tube"]],
+		"box_blend": [ShaderSpec.ShaderType.FLOAT, box_blend, ShaderSpec.UniformHint.RANGE, {"min":0, "max":1, "step":0.01}],
+		"extension": [ShaderSpec.ShaderType.INT, extension, ShaderSpec.UniformHint.ENUM, ["Repeat","Extend","Clip","Mirror"]],
+		"color_space": [ShaderSpec.ShaderType.INT, color_space, ShaderSpec.UniformHint.ENUM, ["sRGB","Non-Color"]],
+		"alpha_mode": [ShaderSpec.ShaderType.INT, alpha_mode, ShaderSpec.UniformHint.ENUM, ["Straight","Premultiplied","ChannelPacked","None"]],
 	}
 
 func get_code_blocks() -> Dictionary:
 	var outputs = get_output_vars()
-	var inputs = _get_input_args()
+	var inputs = get_input_args()
 
 	var coord_expr: String = inputs[0]
-	if _input_sockets[0].source == null:
+	if input_sockets[0].source == null:
 		coord_expr = "vec3(UV, 0.0)"
 
 	var args = {
@@ -68,11 +69,12 @@ func get_code_blocks() -> Dictionary:
 		"module": module_name,
 		"coord": coord_expr,
 		"color": outputs["Color"],
-		"alpha": outputs["Alpha"]
+		"alpha": outputs["Alpha"],
+		"world_normal": ShaderSpec.shared_var_name(ShaderSpec.SharedVar.WORLD_NORMAL),
 	}
 
 	var frag_code := """
-// {module}: {uid} (FRAG)
+// {module}: {uid}
 Tex_img_params params_{uid};
 params_{uid}.interpolation  = u_{uid}_interpolation;
 params_{uid}.projection     = u_{uid}_projection;
@@ -81,8 +83,8 @@ params_{uid}.extension      = u_{uid}_extension;
 params_{uid}.color_space    = u_{uid}_color_space;
 params_{uid}.alpha_mode     = u_{uid}_alpha_mode;
 
-vec4 tex_{uid} = _sample_image(vec3(flip_uv({coord}.xy), {coord}.z), 
-								v_world_normal,
+vec4 tex_{uid} = _sample_image(vec3({coord}), 
+								{world_normal} * ROT_X(-90.0),
 								u_{uid}_image_texture,
 								params_{uid});
 
@@ -93,6 +95,3 @@ vec4 {color} = tex_{uid};
 	return {
 		"fragment_%s" % unique_id : {"stage":"fragment", "code": generate_code_block("fragment", frag_code, args)}
 	}
-
-func get_shared_requirements() -> Dictionary:
-	return {"world_normal": "vec3"}

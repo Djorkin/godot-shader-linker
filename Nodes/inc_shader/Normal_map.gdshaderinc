@@ -1,11 +1,14 @@
 /* SPDX-FileCopyrightText: 2025 D.Jorkin
- * Inspired by Blender normal-map node:
- * https://github.com/blender/blender/blob/main/source/blender/gpu/shaders/material/gpu_shader_material_normal_map.glsl
  *
  * SPDX-License-Identifier: GPL-3.0-or-later
+ *
+ * Portions adapted from Blender normal-map node:
+ *  - source/blender/gpu/shaders/material/gpu_shader_material_normal_map.glsl
+ *    https://github.com/blender/blender/blob/main/source/blender/gpu/shaders/material/gpu_shader_material_normal_map.glsl
+ * Copyright (c) Blender Authors, licensed under GPL-2.0-or-later.
  */
 
-#ifdef SHARED_DEFINE
+#ifdef INCLUDE_WRAPPER
 
 	vec3 get_normal_map(vec3 color, float s, vec3 normal, vec3 tangent) 
 	{

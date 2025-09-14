@@ -1,5 +1,6 @@
-/* SPDX-FileCopyrightText: 2011-2022 Blender Foundation
+/* 
  * SPDX-FileCopyrightText: 2025 D.Jorkin
+ * SPDX-License-Identifier: GPL-3.0-or-later
  *
  * Adapted from Blender Cycles color-blend helpers:
  *   node_color_blend.h
@@ -8,7 +9,7 @@
  *   node_mix_vector.osl
  *   node_mix_vector_non_uniform.osl
  *
- * SPDX-License-Identifier: GPL-3.0-or-later
+ * Copyright (c) Blender Foundation/Authors, licensed under GPL-2.0-or-later.
  */
 
 // mix

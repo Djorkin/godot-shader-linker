@@ -1,9 +1,8 @@
-[gd_scene load_steps=3 format=3 uid="uid://bjieaxn8bvlix"]
+[gd_scene load_steps=2 format=3 uid="uid://bjieaxn8bvlix"]
 
 [ext_resource type="Script" uid="uid://brrgb08yoxf6e" path="res://addons/godot_shader_linker_(gsl)/UI/GSL_Editor.gd" id="1_r7l4l"]
-[ext_resource type="Script" uid="uid://coxqj1bc3l7v2" path="res://addons/godot_shader_linker_(gsl)/CORE/ShaderSaver.gd" id="3_7k1dj"]
 
-[node name="Control" type="Control" node_paths=PackedStringArray("saver")]
+[node name="Control" type="Control"]
 custom_minimum_size = Vector2(0, 35)
 layout_mode = 3
 anchor_top = 0.967593
@@ -12,7 +11,6 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 0
 script = ExtResource("1_r7l4l")
-saver = NodePath("@Node@32187")
 metadata/_edit_use_anchors_ = true
 
 [node name="Panel" type="PanelContainer" parent="."]
@@ -48,8 +46,16 @@ layout_mode = 2
 size_flags_vertical = 3
 text = "Link  Material"
 
-[node name="Saver" type="Node" parent="."]
-script = ExtResource("3_7k1dj")
+[node name="MarginContainer3" type="MarginContainer" parent="Panel/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/margin_top = 1
+theme_override_constants/margin_bottom = 1
+
+[node name="CPU DATA" type="Button" parent="Panel/VBoxContainer/MarginContainer3"]
+layout_mode = 2
+size_flags_vertical = 3
+text = "CPU DATA"
 
 [connection signal="pressed" from="Panel/VBoxContainer/MarginContainer/Create Shader" to="." method="_on_create_shader_pressed"]
 [connection signal="pressed" from="Panel/VBoxContainer/MarginContainer2/Create Material" to="." method="_on_create_material_pressed"]
+[connection signal="pressed" from="Panel/VBoxContainer/MarginContainer3/CPU DATA" to="." method="_on_cpu_data_pressed"]

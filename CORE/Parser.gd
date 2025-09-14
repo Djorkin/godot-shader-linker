@@ -4,16 +4,23 @@
 @tool
 class_name Parser
 
-
-const Import = preload("res://addons/godot_shader_linker_(gsl)/CORE/Importer.gd")
-
 const SERVER_URL := "http://127.0.0.1:5050/link"
 
 signal builder_ready(builder)
 
+
+func data_transfer(data: Dictionary) -> void:
+	var Importer_inst := Importer.new()
+	var Builder_inst : ShaderBuilder = Importer_inst.build_chain(data)
+	if Builder_inst:
+		builder_ready.emit(Builder_inst)
+	#save_json(data) # debug only
+
+
 func send_request() -> void:
 	var http := HTTPRequest.new()
 	var tree := Engine.get_main_loop()
+
 	if tree and tree is SceneTree:
 		tree.root.add_child(http)
 	else:
@@ -48,35 +55,33 @@ func _on_request_completed(result: int, response_code: int, headers: PackedStrin
 
 	var text := body.get_string_from_utf8()
 	var data = JSON.parse_string(text)
+
 	if typeof(data) != TYPE_DICTIONARY:
 		push_error("[color=red]Invalid JSON or response format[/color]")
 		print_rich("[color=red]Invalid JSON or response format[/color]")
 		return
 
-	# Краткий вывод: только количество нод и связей
+	# Short summary: only nodes/links count
 	if data.has("nodes") and data.has("links"):
-		var n = data["nodes"].size()
-		var l = data["links"].size()
-		print_rich("[color=green]Blender server[/color] → nodes=" + str(n) + ", links=" + str(l))
+		var nodes = data["nodes"].size()
+		var links = data["links"].size()
+		print_rich("[color=green]Blender server[/color] → nodes=" + str(nodes) + ", links=" + str(links))
 	else:
 		print_rich("[color=green]Blender server[/color] → " + str(data))
+	
+	data_transfer(data)
 
-	var builder: ShaderBuilder = Import.build_chain(data)
-	if builder:
-		builder_ready.emit(builder)
 
-	_save_json(data)
-
-func _save_json(data: Dictionary) -> void:
+func save_json(data: Dictionary) -> void:
 	var dir_path := "user://gsl_logs"
 	var material_name := "material"
 	if data.has("material") and typeof(data["material"]) == TYPE_STRING:
 		material_name = data["material"]
-	# Приводим к безопасному имени файла
+	# Sanitize file name
 	var file_name := material_name.to_lower().replace(" ", "_") + ".json"
 	var full_path := dir_path + "/" + file_name
 
-	# Убеждаемся, что директория существует (создаём при необходимости)
+	# Ensure directory exists (create if needed)
 	var abs_dir := ProjectSettings.globalize_path(dir_path)
 	if not DirAccess.dir_exists_absolute(abs_dir):
 		var err := DirAccess.make_dir_recursive_absolute(abs_dir)

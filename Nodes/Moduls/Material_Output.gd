@@ -9,7 +9,7 @@ func _init() -> void:
 	super._init()
 	module_name = "Material Output"
 	
-	_input_sockets = [
+	input_sockets = [
 		InputSocket.new("Surface", InputSocket.SocketType.SHADER)
 	]
 
@@ -25,12 +25,9 @@ func get_uniform_definitions() -> Dictionary:
 			uniforms[socket.name.to_lower()] = socket.to_uniform()
 	return uniforms
 
-func get_input_sockets() -> Array[InputSocket]: 
-	return _input_sockets
-
 func get_code_blocks() -> Dictionary:
-	var inputs = _get_input_args()
-	var has_surface: bool = _input_sockets[0].source != null
+	var inputs = get_input_args()
+	var has_surface: bool = input_sockets[0].source != null
 	var surf_expr := ""
 	if has_surface:
 		surf_expr = inputs[0]
@@ -81,7 +78,7 @@ CLEARCOAT_ROUGHNESS = mat_{uid}.coat_roughness;
 """.format({"module": module_name, "uid": uid})
 
 	return {
-		"fragment_%s" % uid : {"stage":"fragment", "code": code}
+		"fragment_%s" % uid : {"stage": "fragment", "code": code}
 	}
 
 func get_render_modes() -> Array[String]:

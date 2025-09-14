@@ -1,11 +1,11 @@
-/* SPDX-FileCopyrightText: 2019-2022 Blender Authors
- * SPDX-FileCopyrightText: 2025 D.Jorkin
- *
- * Derived from Blender common hash library:
- *  - gpu_shader_common_hash.glsl
- *    https://raw.githubusercontent.com/blender/blender/main/source/blender/gpu/shaders/common/gpu_shader_common_hash.glsl
+/* SPDX-FileCopyrightText: 2025 D.Jorkin
  *
  * SPDX-License-Identifier: GPL-3.0-or-later
+ *
+ * Portions adapted from Blender common hash library:
+ *  - source/blender/gpu/shaders/common/gpu_shader_common_hash.glsl
+ *    https://raw.githubusercontent.com/blender/blender/main/source/blender/gpu/shaders/common/gpu_shader_common_hash.glsl
+ * Copyright (c) Blender Authors, licensed under GPL-2.0-or-later.
  */
 
 uint _rot(uint x, uint k) {

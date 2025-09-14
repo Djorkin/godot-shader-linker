@@ -3,14 +3,15 @@
 
 const INC_DIR := "res://addons/godot_shader_linker_(gsl)/Nodes/inc_shader/"
 const INC = {
-	"BLENDER_COORDS": INC_DIR + "formulas/blender_coords.gdshaderinc",
+	"BLENDER_COORDS": INC_DIR + "formulas/coords.gdshaderinc", 
+	"COORDS": INC_DIR + "formulas/coords.gdshaderinc",
 	"PHYSICAL": INC_DIR + "formulas/physical.gdshaderinc",
 	"MATH": INC_DIR + "formulas/math.gdshaderinc",
 	"MATERIAL": INC_DIR + "formulas/struct_Material.gdshaderinc",
 	"TEX_COORD": INC_DIR + "Tex_Cord.gdshaderinc",
 	"MAPPING": INC_DIR + "Mapping.gdshaderinc",
 	"MATERIAL_OUT": INC_DIR + "Material_Output.gdshaderinc",
-	"BSDF_PRINCILED": INC_DIR + "BSDF_principled.gdshaderinc",
+	"BSDF_PRINCIPLED": INC_DIR + "BSDF_principled.gdshaderinc",
 	"TEX_IMAGE": INC_DIR + "Tex_image.gdshaderinc",
 	"STRUCT_TEX_IMG": INC_DIR + "formulas/struct_Tex_img.gdshaderinc",
 	"BUMP": INC_DIR + "Bump.gdshaderinc",
@@ -22,5 +23,6 @@ const INC = {
 	"NOISE_TEXTURE": INC_DIR + "noise_texture.gdshaderinc",
     "COLOR_CONVERSIONS": INC_DIR + "color_conversions.gdshaderinc",
     "MIX_MODES": INC_DIR + "mix_modes.gdshaderinc",
-	"MIX_FUNCTIONS": INC_DIR + "mix_functions.gdshaderinc",
+ 	"MIX_FUNCTIONS": INC_DIR + "mix_functions.gdshaderinc",
+ 	"COLOR_RAMP": INC_DIR + "color_ramp.gdshaderinc",
 }

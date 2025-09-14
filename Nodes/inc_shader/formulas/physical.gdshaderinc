@@ -1,19 +1,18 @@
-/* SPDX-FileCopyrightText: 2019-2023 Blender Authors
- * SPDX-FileCopyrightText: 2025 D.Jorkin
- *
- * Adapted from Blender’s Principled BSDF utilities:
- * https://github.com/blender/blender/blob/main/source/blender/gpu/shaders/material/gpu_shader_material_principled.glsl
+/* SPDX-FileCopyrightText: 2025 D.Jorkin
  *
  * SPDX-License-Identifier: GPL-3.0-or-later
+ *
+ * Portions adapted from Blender’s Principled BSDF utilities:
+ *  - source/blender/gpu/shaders/material/gpu_shader_material_principled.glsl
+ *    https://github.com/blender/blender/blob/main/source/blender/gpu/shaders/material/gpu_shader_material_principled.glsl
+ * Copyright (c) Blender Authors, licensed under GPL-2.0-or-later.
  */
-
-
 
 
 vec3 tint_from_color(vec3 color)
 {
-  float lum = dot(color, vec3(0.3, 0.6, 0.1));
-  return (lum > 0.0) ? color / lum : vec3(1.0);
+    float lum = dot(color, vec3(0.3, 0.6, 0.1));
+    return (lum > 0.0) ? color / lum : vec3(1.0);
 }
 
 float principled_sheen(float NV, float rough) {
@@ -26,8 +25,8 @@ float principled_sheen(float NV, float rough) {
 
 float ior_from_F0(float F0)
 {
-  float f = sqrt(clamp(F0, 0.0, 0.99));
-  return (-f - 1.0) / (f - 1.0);
+    float f = sqrt(clamp(F0, 0.0, 0.99));
+    return (-f - 1.0) / (f - 1.0);
 }
 
 float F0_from_ior(float ior) {

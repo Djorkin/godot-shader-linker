@@ -33,7 +33,7 @@ func _init() -> void:
     super._init()
     module_name = "Noise Texture"
 
-    _input_sockets = [
+    input_sockets = [
         InputSocket.new("Vector", InputSocket.SocketType.VEC3, Vector3.ZERO),
         InputSocket.new("W", InputSocket.SocketType.FLOAT, 0.0),
         InputSocket.new("Scale", InputSocket.SocketType.FLOAT, 5.0),
@@ -45,18 +45,19 @@ func _init() -> void:
         InputSocket.new("Distortion", InputSocket.SocketType.FLOAT, 0.0)
     ]
 
-    _output_sockets = [
+    output_sockets = [
         OutputSocket.new("Value", OutputSocket.SocketType.FLOAT),
         OutputSocket.new("Color", OutputSocket.SocketType.VEC4)
     ]
 
-    for socket in _output_sockets:
+    for socket in output_sockets:
         socket.set_parent_module(self)
 
 
 func get_include_files() -> Array[String]:
     return [
-        PATHS.INC["BLENDER_COORDS"],
+        PATHS.INC["COORDS"],
+        PATHS.INC["TEX_COORD"],
         PATHS.INC["STRUCT_NOISE_PARAMS"],
         PATHS.INC["BLENDER_HASH"],
         PATHS.INC["NOISE_BASE"],
@@ -64,20 +65,13 @@ func get_include_files() -> Array[String]:
         PATHS.INC["NOISE_TEXTURE"],
     ]
 
-func get_input_sockets() -> Array[InputSocket]:
-    return _input_sockets
-
-func get_output_sockets() -> Array[OutputSocket]:
-    return _output_sockets
 
 func get_uniform_definitions() -> Dictionary:
     var u: Dictionary = {}
-    
-    u["dimensions"] = {"type": "int", "default": dimensions, "hint": "hint_enum(\"1D\", \"2D\", \"3D\", \"4D\")"}
-    u["fractal_type"] = {"type": "int", "default": fractal_type, "hint": "hint_enum(\"Multifractal\", \"Ridged Multifractal\", \"Hybrid Multifractal\", \"fBm\", \"Hetero Terrain\")"}
-    u["normalize"] = {"type": "bool", "default": normalize}
 
-
+    u["dimensions"] = [ShaderSpec.ShaderType.INT, dimensions, ShaderSpec.UniformHint.ENUM, ["1D", "2D", "3D", "4D"]]
+    u["fractal_type"] = [ShaderSpec.ShaderType.INT, fractal_type, ShaderSpec.UniformHint.ENUM, ["Multifractal", "Ridged Multifractal", "Hybrid Multifractal", "fBm", "Hetero Terrain"]]
+    u["normalize"] = [ShaderSpec.ShaderType.BOOL, normalize]
 
     for s in get_input_sockets():
         if s.source:
@@ -90,13 +84,12 @@ func get_uniform_definitions() -> Dictionary:
     return u
 
 func get_code_blocks() -> Dictionary:
-    update_active_sockets()
     var active := get_active_output_sockets()
     if active.is_empty():
         return {}
 
     var outputs := get_output_vars()
-    var inputs := _get_input_args()
+    var inputs := get_input_args()
 
     var blocks: Dictionary = {}
 
@@ -107,12 +100,17 @@ func get_code_blocks() -> Dictionary:
         vector_expr = "vec3(0.0)"
     else:
         var idx_vec := 0
-        if _input_sockets[idx_vec].source == null:
+        if input_sockets[idx_vec].source == null:
             # No connection use generated coords through varying
             need_varying = true
             var varying_name := "gen_vec_%s" % unique_id
-            var global_decl := "varying vec3 %s;" % varying_name
-            var vertex_code := """\n // {module}: {uid} (VERTEX)\n{varying} = apply_generated(blender_to_godot(VERTEX));\n""".format({
+            var global_decl := """
+varying vec3 %s;
+""" % varying_name
+            var vertex_code := """
+// {module}: {uid} (VERTEX)
+                {varying} = get_generated(VERTEX);
+""".format({
                 "module": module_name,
                 "uid": unique_id,
                 "varying": varying_name,
@@ -151,11 +149,28 @@ func get_code_blocks() -> Dictionary:
         "offset": inputs[6],
         "distortion": inputs[8],
         "gain": inputs[7],
-        "normalize": _get_prefixed_name("normalize"),
+        "normalize": get_prefixed_name("normalize"),
         "noise_path": noise_path,
         "dim_define": dims_define,
         "fract_define": fract_define
     }
+
+    var param_lines := []
+    if dims_define == 0 or dims_define == 3:
+        param_lines.append("params_{uid}.w = {w};")
+    param_lines.append("params_{uid}.scale = {scale};")
+    param_lines.append("params_{uid}.detail = {detail};")
+    param_lines.append("params_{uid}.roughness = {roughness};")
+    param_lines.append("params_{uid}.lacunarity = {lacunarity};")
+    if fract_define in [1,2,4]:
+        param_lines.append("params_{uid}.offset = {offset};")
+    param_lines.append("params_{uid}.distortion = {distortion};")
+    if fract_define in [1,2]:
+        param_lines.append("params_{uid}.gain = {gain};")
+    if fract_define == 3:
+        param_lines.append("params_{uid}.normalize = {normalize};")
+    var params_code := "\n    ".join(param_lines).format(args)
+    args["params_code"] = params_code
 
     var base_funcs_np := [
         "noise_multi_fractal_np",
@@ -274,24 +289,7 @@ void noise_texture_{uid}(vec3 coord, NoiseParams params, out float value, out ve
         "body": body.indent("    ")
     })
 
-    blocks["global_noise_%s" % uid] = {"stage": "global", "code": func_code}
-
-    var param_lines := []
-    if dims_define == 0 or dims_define == 3:
-        param_lines.append("params_{uid}.w = {w};")
-    param_lines.append("params_{uid}.scale = {scale};")
-    param_lines.append("params_{uid}.detail = {detail};")
-    param_lines.append("params_{uid}.roughness = {roughness};")
-    param_lines.append("params_{uid}.lacunarity = {lacunarity};")
-    if fract_define in [1,2,4]:
-        param_lines.append("params_{uid}.offset = {offset};")
-    param_lines.append("params_{uid}.distortion = {distortion};")
-    if fract_define in [1,2]:
-        param_lines.append("params_{uid}.gain = {gain};")
-    if fract_define == 3:
-        param_lines.append("params_{uid}.normalize = {normalize};")
-    var params_code := "\n    ".join(param_lines).format(args)
-    args["params_code"] = params_code
+    blocks["functions_noise_%s" % uid] = {"stage": "functions", "code": func_code}
 
     var frag_template := """
 // {module}: {uid} (FRAG)
@@ -310,9 +308,15 @@ float {value_out} = value_{uid};
 
     return blocks
 
+func get_required_instance_uniforms() -> Array[int]:
+    var idx_vec := 0
+    if dimensions != DimensionType.D1 and input_sockets.size() > 0 and input_sockets[idx_vec].source == null:
+        return [ShaderSpec.InstanceUniform.BBOX]
+    return []
+
 func get_compile_defines() -> Array[String]:
     var defs: Array[String] = []
     # If the "Vector" input is not connected, add an auxiliary constant
-    if _input_sockets.size() > 0 and _input_sockets[0].source == null:
-        defs.append("NOISE_NONE_CONNECTED")
+    if input_sockets.size() > 0 and input_sockets[0].source == null:
+        defs.append("NEED_AABB")
     return defs

@@ -2,47 +2,35 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 
 @tool
-class_name Importer
-extends Object
+class_name Importer 
 
+var Collector_inst : Collector = Collector.new()
+var Linker_inst : Linker = Linker.new()
+var Mapper_inst : Mapper = Mapper.new()
+var Builder_inst : ShaderBuilder = ShaderBuilder.new()
 
-static var NODE_CLASSES : Dictionary = {}
-
-static func init_node_classes() -> void:
-	NODE_CLASSES = {
+var NODE_CLASSES : Dictionary = {
 		"TexCoordModule": TextureCoordModule,
-		"MappingModule":  MappingModule,
+		"MappingModule": MappingModule,
 		"TexImageModule": TextureImageModule,
-		"BumpModule":     BumpModule,
+		"BumpModule": BumpModule,
 		"BsdfPrincipledModule": PrincipledBSDFModule,
 		"OutputMaterialModule": OutputModule,
 		"NormalMapModule": NormalMapModule,
 		"TexNoiseModule": NoiseTextureModule,
-		"NoiseTextureModule": NoiseTextureModule,
 		"MixModule": MixModule,
-	}
+		"MathModule": MathModule,
+		"VectorMathModule": VectorMathModule,
+		"MapRangeModule": MapRangeModule,
+		"TexWhiteNoiseModule": TexWhiteNoiseModule,
+		"CombineColorModule": CombineColorModule,
+		"SeparateColorModule": SeparateColorModule,
+		"CombineXYZModule": CombineXYZModule,
+		"SeparateXYZModule": SeparateXYZModule,
+		"ColorRampModule": ColorRampModule,
+}
 
-static func build_chain(data: Dictionary) -> ShaderBuilder:
-	init_node_classes()
-	if not (data.has("nodes") and data.has("links")):
-		push_error("No nodes/links fields")
-		return null
-	
-	var mapper := Mapper.new()
-	mapper.clear_chain()
-	
-	var node_table: Dictionary = _instantiate_modules(data)
-	
-	_add_modules_to_mapper(node_table, data, mapper)
-	_link_modules(data, node_table)
-	_register_in_collector(mapper)
-	
-	var builder := ShaderBuilder.new()
-	Collector.configure(builder)
-	return builder
-
-
-static func _instantiate_modules(data: Dictionary) -> Dictionary:
+func instantiate_modules(data: Dictionary) -> Dictionary:
 	var node_table := {}
 	for node_dict in data["nodes"]:
 		if typeof(node_dict) != TYPE_DICTIONARY:
@@ -56,34 +44,49 @@ static func _instantiate_modules(data: Dictionary) -> Dictionary:
 		node_table[node_dict.get("id")] = module
 	return node_table
 
-
-static func _add_modules_to_mapper(node_table: Dictionary, data: Dictionary, mapper: Mapper) -> void:
+func add_modules_to_mapper(node_table: Dictionary, data: Dictionary) -> void:
 	for node_dict in data["nodes"]:
 		var id = node_dict.get("id")
 		if not node_table.has(id):
 			continue
 		var module: ShaderModule = node_table[id]
-		
-		# Передача параметров
+		# Pass parameters
 		if node_dict.has("params") and typeof(node_dict["params"]) == TYPE_DICTIONARY:
 			for p in node_dict["params"]:
 				var v = node_dict["params"][p]
-				module.set_uniform_override(p, _sanitize_param_value(v))
-		mapper.add_module(module)
+				module.set_uniform_override(p, sanitize_param_value(v))
+			# Special handling of texture paths for TextureImageModule
+			if module is TextureImageModule and node_dict.has("params"):
+				var params: Dictionary = node_dict["params"]
+				if params.has("image_path") and typeof(params["image_path"]) == TYPE_STRING:
+					var uniform_name = module.get_prefixed_name("image_texture")
+					Builder_inst.uniform_resources[uniform_name] = params["image_path"]
+			# Special handling for ColorRampModule LUT resource
+			if module is ColorRampModule and node_dict.has("params"):
+				var params_cr: Dictionary = node_dict["params"]
+				if params_cr.has("image_path") and typeof(params_cr["image_path"]) == TYPE_STRING:
+					var lut_uniform = module.get_prefixed_name("colormap")
+					Builder_inst.uniform_resources[lut_uniform] = params_cr["image_path"]
+		Mapper_inst.add_module(module)
 
+func register_in_collector() -> void:
+	var final_chain: Array[ShaderModule] = Mapper_inst.build_final_chain()
+	Collector_inst.registered_modules.clear()
+	for mod in final_chain:
+		Collector_inst.register_module(mod) 
 
-static func _link_modules(data: Dictionary, node_table: Dictionary) -> void:
+func link_modules(data: Dictionary, node_table: Dictionary) -> void:
 	for link_item in data["links"]:
 		var from_id: String
 		var to_id: String
 		var from_socket := 0
-		var to_socket   := 0
+		var to_socket := 0
 
 		if typeof(link_item) == TYPE_DICTIONARY:
 			from_id = str(link_item.get("from_node"))
-			to_id   = str(link_item.get("to_node"))
+			to_id = str(link_item.get("to_node"))
 			from_socket = int(link_item.get("from_socket", 0))
-			to_socket   = int(link_item.get("to_socket", 0))
+			to_socket = int(link_item.get("to_socket", 0))
 		elif typeof(link_item) == TYPE_STRING:
 			var parts = link_item.split(",")
 			if parts.size() < 4:
@@ -94,38 +97,43 @@ static func _link_modules(data: Dictionary, node_table: Dictionary) -> void:
 			to_socket = int(parts[3])
 		else:
 			continue
-
 		var from_mod: ShaderModule = node_table.get(from_id, null)
-		var to_mod:   ShaderModule = node_table.get(to_id, null)
+		var to_mod: ShaderModule = node_table.get(to_id, null)
 		if from_mod == null or to_mod == null:
 			continue
-		Linker.link_modules(from_mod, from_socket, to_mod, to_socket)
+		Linker_inst.link_modules(from_mod, from_socket, to_mod, to_socket)
 
+func build_chain(data: Dictionary) -> ShaderBuilder:
+	if not (data.has("nodes") and data.has("links")):
+		push_error("No nodes/links fields")
+		return
+	
+	Mapper_inst.clear_chain(Collector_inst)
+	
+	var node_table: Dictionary = instantiate_modules(data)
+	add_modules_to_mapper(node_table, data)
+	link_modules(data, node_table)
+	register_in_collector()
+	
+	Collector_inst.configure(Builder_inst)
+	return Builder_inst
 
-static func _register_in_collector(mapper: Mapper) -> void:
-	var final_chain: Array[ShaderModule] = mapper.build_final_chain()
-	Collector.registered_modules.clear()
-	for mod in final_chain:
-		Collector.register_module(mod) 
-
-
-static func _sanitize_param_value(val):
+func sanitize_param_value(val):
 	match typeof(val):
 		TYPE_ARRAY:
-			if val.size() == 3 and _array_is_numeric(val):
+			if val.size() == 3 and array_is_numeric(val):
 				return Vector3(val[0], val[1], val[2])
-			elif val.size() == 4 and _array_is_numeric(val):
+			elif val.size() == 4 and array_is_numeric(val):
 				return Vector4(val[0], val[1], val[2], val[3])
 			return val
 		TYPE_FLOAT:
-			# Если число целое – приводим к int
 			if int(val) == val:
 				return int(val)
 			return val
 		_:
 			return val
 
-static func _array_is_numeric(arr: Array) -> bool:
+func array_is_numeric(arr: Array) -> bool:
 	for e in arr:
 		if typeof(e) not in [TYPE_FLOAT, TYPE_INT]:
 			return false

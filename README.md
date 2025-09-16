@@ -10,6 +10,19 @@
 - Full integration with the Godot ecosystem (Inspector, WorldEnvironment, post‑processing).
 - Parameter animation via GDScript or `AnimationPlayer`.
 
+<p align="center">
+  <img src="https://github.com/Djorkin/godot-shader-linker/releases/download/v0.2.0/1.gif" alt="GSL demo 1" width="720"><br>
+  <em>Linking a Blender material → Godot shader (GSL v0.2.0)</em>
+</p>
+
+<p align="center">
+  <img src="https://github.com/Djorkin/godot-shader-linker/releases/download/v0.2.0/2.gif" alt="GSL demo 2" width="720">
+</p>
+
+<p align="center">
+  <img src="https://github.com/Djorkin/godot-shader-linker/releases/download/v0.2.0/3.gif" alt="GSL demo 3" width="720">
+</p>
+
 ## Installation
 1. Copy the `addons/godot_shader_linker_(gsl)` directory into your Godot project.  
 2. In **Project → Plugins** enable “Godot Shader Linker (GSL)”.  

@@ -4,19 +4,23 @@
 @tool
 extends Control
 
+
 var Parser_inst = Parser.new()
 var SSL = ServerStatusListener.new()
 var Saver_inst = ShaderSaver.new()
+var chain_script := preload("res://Assets/mat/chain.gd")
 
 enum SaveMode { NONE, SHADER, MATERIAL }
 var save_mode: int = SaveMode.NONE
 
 signal request_cpu_data_update
 
+
 func _ready() -> void:
 	add_child(Saver_inst)
 	SSL.start()
 	Parser_inst.builder_ready.connect(builder_ready)
+
 
 func _exit_tree() -> void:
 	SSL.stop()
@@ -38,3 +42,9 @@ func builder_ready(builder: ShaderBuilder) -> void:
 
 func _on_cpu_data_pressed() -> void:
 	emit_signal("request_cpu_data_update")
+
+
+func _on_custom_pressed() -> void:
+	var chain_builder: ChainBuilder = chain_script.new()
+	var builder: ShaderBuilder = chain_builder.build_example()
+	Saver_inst.save_shader_dialog(builder)

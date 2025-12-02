@@ -5,9 +5,11 @@
 class_name ColorRampModule
 extends ShaderModule
 
-enum OptMode { LUT, CONST, LINEAR, EASE }
+enum Mode { CONST, LINEAR }
 
-@export var opt_mode: int = OptMode.LUT
+@export var mode: int = Mode.LINEAR
+@export var gradient: Gradient = Gradient.new()
+
 
 func _init() -> void:
 	super._init()
@@ -25,36 +27,23 @@ func configure_output_sockets() -> void:
 		OutputSocket.new("Color", OutputSocket.SocketType.VEC4),
 		OutputSocket.new("Alpha", OutputSocket.SocketType.FLOAT),
 	]
-	for s in output_sockets:
-		s.set_parent_module(self)
+	for socket in output_sockets:
+		socket.set_parent_module(self)
 
 func get_include_files() -> Array[String]:
 	return [PATHS.INC["COLOR_RAMP"]]
 
 func get_uniform_definitions() -> Dictionary:
-	var u := {}
-	# Unlinked Fac
-	for s in get_input_sockets():
-		if s.source:
+	var uniforms := {}
+	for socket in get_input_sockets():
+		if socket.source:
 			continue
-		u[s.name.to_lower()] = s.to_uniform()
-	# Branch-specific uniforms
-	match int(opt_mode):
-		OptMode.CONST:
-			u["edge"] = [ShaderSpec.ShaderType.FLOAT, 0.5]
-			u["color1"] = [ShaderSpec.ShaderType.VEC4, Color(0,0,0,1), ShaderSpec.UniformHint.SOURCE_COLOR]
-			u["color2"] = [ShaderSpec.ShaderType.VEC4, Color(1,1,1,1), ShaderSpec.UniformHint.SOURCE_COLOR]
-		OptMode.LINEAR, OptMode.EASE:
-			u["mulbias"] = [ShaderSpec.ShaderType.VEC3, Vector3(1.0, 0.0, 0.0)]
-			u["color1"] = [ShaderSpec.ShaderType.VEC4, Color(0,0,0,1), ShaderSpec.UniformHint.SOURCE_COLOR]
-			u["color2"] = [ShaderSpec.ShaderType.VEC4, Color(1,1,1,1), ShaderSpec.UniformHint.SOURCE_COLOR]
-		OptMode.LUT:
-			u["colormap"] = [ShaderSpec.ShaderType.SAMPLER2D]
-			# lut_nearest не нужен как uniform в GLSL: выбираем ветку на этапе генерации
-		_:
-			pass
-	u["opt_mode"] = [ShaderSpec.ShaderType.INT, opt_mode, ShaderSpec.UniformHint.ENUM, ["LUT","CONST","LINEAR","EASE"]]
-	return u
+		uniforms[socket.name.to_lower()] = socket.to_uniform()
+	var hints := ["CONST", "LINEAR"]
+	# opt_mode синхронизирован с локальным enum Mode и Gradient.interpolation_mode
+	uniforms["opt_mode"] = [ShaderSpec.ShaderType.INT, mode, ShaderSpec.UniformHint.ENUM, hints]
+	uniforms["colormap"] = [ShaderSpec.ShaderType.SAMPLER2D]
+	return uniforms
 
 func get_code_blocks() -> Dictionary:
 	var active := get_active_output_sockets()
@@ -67,36 +56,15 @@ func get_code_blocks() -> Dictionary:
 	if args.size() > 0:
 		fac_expr = String(args[0])
 
-	# Сформировать вызов внутри GEN-функций без if в GLSL
 	var call_line := ""
-	match int(opt_mode):
-		OptMode.CONST:
-			var p_edge = get_prefixed_name("edge")
-			var p_c1 = get_prefixed_name("color1")
-			var p_c2 = get_prefixed_name("color2")
-			call_line = "\tvaltorgb_opti_constant(fac, %s, %s, %s, outcol, outa);" % [p_edge, p_c1, p_c2]
-		OptMode.LINEAR:
-			var p_mb = get_prefixed_name("mulbias")
-			var p_c1l = get_prefixed_name("color1")
-			var p_c2l = get_prefixed_name("color2")
-			call_line = "\tvaltorgb_opti_linear(fac, vec2(%s.x, %s.y), %s, %s, outcol, outa);" % [p_mb, p_mb, p_c1l, p_c2l]
-		OptMode.EASE:
-			var p_mbe = get_prefixed_name("mulbias")
-			var p_c1e = get_prefixed_name("color1")
-			var p_c2e = get_prefixed_name("color2")
-			call_line = "\tvaltorgb_opti_ease(fac, vec2(%s.x, %s.y), %s, %s, outcol, outa);" % [p_mbe, p_mbe, p_c1e, p_c2e]
-		OptMode.LUT:
-			var p_cm = get_prefixed_name("colormap")
-			var use_nearest := false
-			var ov = get_uniform_override("lut_nearest")
-			if ov != null and typeof(ov) == TYPE_BOOL and ov:
-				use_nearest = true
-			if use_nearest:
-				call_line = "\tvaltorgb_lut_nearest(fac, %s, outcol, outa);" % [p_cm]
-			else:
-				call_line = "\tvaltorgb_lut(fac, %s, outcol, outa);" % [p_cm]
+	var p_cm = get_prefixed_name("colormap")
+	match int(mode):
+		Mode.CONST:
+			call_line = "\tvaltorgb_lut_nearest(fac, %s, outcol, outa);" % [p_cm]
+		Mode.LINEAR:
+			call_line = "\tvaltorgb_lut(fac, %s, outcol, outa);" % [p_cm]
 		_:
-			pass
+			call_line = "\tvaltorgb_lut(fac, %s, outcol, outa);" % [p_cm]
 
 	var tmpl_funcs := """
 	// {module}: {uid} (GEN)
@@ -139,5 +107,44 @@ func get_code_blocks() -> Dictionary:
 
 func set_uniform_override(name: String, value) -> void:
 	if name == "opt_mode":
-		opt_mode = int(value)
-	super.set_uniform_override(name, value)
+		mode = int(value)
+		if mode == Mode.CONST:
+			gradient.interpolation_mode = Gradient.GRADIENT_INTERPOLATE_CONSTANT
+		else:
+			gradient.interpolation_mode = Gradient.GRADIENT_INTERPOLATE_LINEAR
+	elif name == "mode":
+		if String(value).to_upper() == "CONSTANT":
+			mode = Mode.CONST
+			gradient.interpolation_mode = Gradient.GRADIENT_INTERPOLATE_CONSTANT
+		else:
+			mode = Mode.LINEAR
+			gradient.interpolation_mode = Gradient.GRADIENT_INTERPOLATE_LINEAR
+	elif name == "stops":
+		update_gradient_from_stops(value)
+	else:
+		super.set_uniform_override(name, value)
+
+func update_gradient_from_stops(stops) -> void:
+	if typeof(stops) != TYPE_ARRAY:
+		return
+
+	for stop in stops:
+		if typeof(stop) != TYPE_ARRAY or stop.size() < 2:
+			continue
+		var pos_raw = stop[0]
+		var col_raw = stop[1]
+		var pos := float(pos_raw)
+
+		var col := Color(1, 1, 1, 1)
+		if typeof(col_raw) == TYPE_ARRAY and col_raw.size() >= 4:
+			col = Color(col_raw[0], col_raw[1], col_raw[2], col_raw[3])
+
+		gradient.add_point(pos, col)
+
+
+func register_gradient_resource(builder: ShaderBuilder) -> void:
+	var tex := GradientTexture2D.new()
+	tex.gradient = gradient
+	tex.width = 257
+	var uniform_name := get_prefixed_name("colormap")
+	builder.uniform_object_resources[uniform_name] = tex

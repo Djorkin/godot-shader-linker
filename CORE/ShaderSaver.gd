@@ -108,24 +108,30 @@ func create_material(builder: ShaderBuilder) -> ShaderMaterial:
 
 func bind_available_textures_and_collect_waiting(material: ShaderMaterial, builder: ShaderBuilder) -> bool:
 	waiting_uniform_textures.clear()
-	if not builder or not builder.uniform_resources:
-		print_rich("[color=yellow]GSL[/color] No textures to bind")
+	if not builder:
+		print_rich("[color=yellow]GSL[/color] No builder, nothing to bind")
 		return true
 	var bound := 0
 	var waiting := 0
-	for uname in builder.uniform_resources.keys():
-		var res_path: String = str(builder.uniform_resources[uname])
-		if ResourceLoader.exists(res_path):
-			var tex := load(res_path) as Texture2D
-			if tex:
-				material.set_shader_parameter(uname, tex)
-				#print_rich("[color=green]GSL[/color] Bound %s ← %s" % [uname, res_path])
+	if builder.uniform_resources:
+		for uname in builder.uniform_resources.keys():
+			var res_path: String = str(builder.uniform_resources[uname])
+			if ResourceLoader.exists(res_path):
+				var tex := load(res_path) as Texture2D
+				if tex:
+					material.set_shader_parameter(uname, tex)
+					bound += 1
+				else:
+					push_warning("Failed to load Texture2D: %s" % res_path)
 			else:
-				push_warning("Failed to load Texture2D: %s" % res_path)
-		else:
-			waiting_uniform_textures[uname] = res_path
-			waiting += 1
-			#print_rich("[color=yellow]GSL[/color] Awaiting import: %s" % res_path)
+				waiting_uniform_textures[uname] = res_path
+				waiting += 1
+	if builder.uniform_object_resources:
+		for oname in builder.uniform_object_resources.keys():
+			var res: Resource = builder.uniform_object_resources[oname]
+			if res and res is Texture2D:
+				material.set_shader_parameter(oname, res)
+				bound += 1
 	#print_rich("[color=yellow]GSL[/color] Bound: %d, pending: %d" % [bound, waiting])
 	return waiting_uniform_textures.is_empty()
 

@@ -15,6 +15,7 @@ var function_blocks := []
 var global_blocks := []
 var defines := {} 
 var uniform_resources := {}
+var uniform_object_resources := {}
 
 func shader_type(type: String) -> void:
 	_shader_type = type

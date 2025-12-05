@@ -1,72 +1,60 @@
-[gd_scene load_steps=2 format=3 uid="uid://bjieaxn8bvlix"]
+[gd_scene load_steps=6 format=3 uid="uid://bjieaxn8bvlix"]
 
 [ext_resource type="Script" uid="uid://dlatdtdc05fhb" path="res://addons/godot_shader_linker_(gsl)/UI/GSL_Editor.gd" id="1_r7l4l"]
+[ext_resource type="PackedScene" uid="uid://bwf0alcy3hvh8" path="res://addons/godot_shader_linker_(gsl)/UI/Module_UI/M_Status.tscn" id="3_3mueg"]
+[ext_resource type="PackedScene" uid="uid://cpnkvt3b13qml" path="res://addons/godot_shader_linker_(gsl)/UI/Module_UI/M_Log.tscn" id="4_3mueg"]
+[ext_resource type="PackedScene" uid="uid://56ks3sis6cd6" path="res://addons/godot_shader_linker_(gsl)/UI/Module_UI/M_Аction_Panel.tscn" id="4_mr5ci"]
+[ext_resource type="PackedScene" uid="uid://dy3in3dt7aaoj" path="res://addons/godot_shader_linker_(gsl)/UI/Settings_UI.tscn" id="5_mr5ci"]
 
 [node name="Control" type="Control"]
-custom_minimum_size = Vector2(0, 35)
+custom_minimum_size = Vector2(0, 250)
 layout_mode = 3
-anchor_top = 0.967593
+anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
-grow_vertical = 0
+grow_vertical = 2
 script = ExtResource("1_r7l4l")
-metadata/_edit_use_anchors_ = true
 
-[node name="Panel" type="PanelContainer" parent="."]
+[node name="VBoxContainer" type="VBoxContainer" parent="."]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+theme_override_constants/separation = 0
 
-[node name="VBoxContainer" type="HBoxContainer" parent="Panel"]
+[node name="TabBar" type="TabContainer" parent="VBoxContainer"]
 layout_mode = 2
-size_flags_horizontal = 0
-alignment = 1
-metadata/_edit_use_anchors_ = true
+size_flags_horizontal = 3
+size_flags_vertical = 3
+current_tab = 0
 
-[node name="MarginContainer" type="MarginContainer" parent="Panel/VBoxContainer"]
-layout_mode = 2
-size_flags_horizontal = 4
-
-[node name="Create Shader" type="Button" parent="Panel/VBoxContainer/MarginContainer"]
+[node name="Main" type="HBoxContainer" parent="VBoxContainer/TabBar"]
 layout_mode = 2
 size_flags_vertical = 3
-text = "Link Shader"
+metadata/_tab_index = 0
 
-[node name="MarginContainer2" type="MarginContainer" parent="Panel/VBoxContainer"]
+[node name="Action_Panel" parent="VBoxContainer/TabBar/Main" instance=ExtResource("4_mr5ci")]
+unique_name_in_owner = true
 layout_mode = 2
-theme_override_constants/margin_top = 1
-theme_override_constants/margin_bottom = 1
 
-[node name="Create Material" type="Button" parent="Panel/VBoxContainer/MarginContainer2"]
+[node name="VBoxContainer" type="VBoxContainer" parent="VBoxContainer/TabBar/Main"]
 layout_mode = 2
-size_flags_vertical = 3
-text = "Link  Material"
+size_flags_horizontal = 3
+theme_override_constants/separation = 2
 
-[node name="MarginContainer3" type="MarginContainer" parent="Panel/VBoxContainer"]
+[node name="Status_Panel" parent="VBoxContainer/TabBar/Main/VBoxContainer" instance=ExtResource("3_3mueg")]
+unique_name_in_owner = true
 layout_mode = 2
-theme_override_constants/margin_top = 1
-theme_override_constants/margin_bottom = 1
 
-[node name="CPU DATA" type="Button" parent="Panel/VBoxContainer/MarginContainer3"]
+[node name="LOG" parent="VBoxContainer/TabBar/Main/VBoxContainer" instance=ExtResource("4_3mueg")]
+unique_name_in_owner = true
 layout_mode = 2
-size_flags_vertical = 3
-text = "CPU DATA"
 
-[node name="MarginContainer4" type="MarginContainer" parent="Panel/VBoxContainer"]
+[node name="Settings" parent="VBoxContainer/TabBar" instance=ExtResource("5_mr5ci")]
+unique_name_in_owner = true
+visible = false
 layout_mode = 2
-theme_override_constants/margin_top = 1
-theme_override_constants/margin_bottom = 1
-
-[node name="CUSTOM" type="Button" parent="Panel/VBoxContainer/MarginContainer4"]
-layout_mode = 2
-size_flags_vertical = 3
-text = "CUSTOM"
-
-[connection signal="pressed" from="Panel/VBoxContainer/MarginContainer/Create Shader" to="." method="_on_create_shader_pressed"]
-[connection signal="pressed" from="Panel/VBoxContainer/MarginContainer2/Create Material" to="." method="_on_create_material_pressed"]
-[connection signal="pressed" from="Panel/VBoxContainer/MarginContainer3/CPU DATA" to="." method="_on_cpu_data_pressed"]
-[connection signal="pressed" from="Panel/VBoxContainer/MarginContainer4/CUSTOM" to="." method="_on_custom_pressed"]
+metadata/_tab_index = 1

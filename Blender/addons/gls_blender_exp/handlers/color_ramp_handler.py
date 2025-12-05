@@ -1,27 +1,12 @@
 # SPDX-FileCopyrightText: 2025 D.Jorkin
 # SPDX-License-Identifier: GPL-3.0-or-later
 
-"""
-Обработчик ShaderNodeValToRGB (Color Ramp) для экспортера GSL.
 
-Новая логика (v0.3+):
-- Без LUT и mulbias/edge.
-- Всегда экспортируем все точки ColorRamp как массив stops.
-- Режим интерполяции сводим к двум вариантам: CONSTANT или LINEAR
-  (режим EASE и прочие сводятся к LINEAR).
-
-Экспортируемые функции:
-- handle(n, node_info: dict, params: dict, mat) -> None
-"""
-
-from ..logger import get_logger
 
 try:
     import bpy  # type: ignore
 except Exception:
     bpy = None  # type: ignore
-
-logger = get_logger().getChild("handlers.color_ramp")
 
 
 def _get_interp(coba) -> str:
@@ -56,7 +41,6 @@ def handle(n, node_info: dict, params: dict, mat) -> None:
         coba = None
 
     if not coba or getattr(coba, "elements", None) is None or len(coba.elements) < 1:
-        logger.warning("ColorRamp без точек, узел будет проигнорирован")
         return
 
     stops = []
@@ -66,11 +50,9 @@ def handle(n, node_info: dict, params: dict, mat) -> None:
             r, g, b, a = _color4_from_element(el)
             stops.append([pos, [r, g, b, a]])
     except Exception as exc:
-        logger.error(f"Не удалось собрать точки ColorRamp '{getattr(n, 'name', '?')}': {exc}")
         return
 
     if not stops:
-        logger.warning("ColorRamp без валидных точек, узел будет проигнорирован")
         return
 
     params["stops"] = stops

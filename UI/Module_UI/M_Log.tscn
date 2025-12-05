@@ -1,0 +1,74 @@
+[gd_scene load_steps=5 format=3 uid="uid://cpnkvt3b13qml"]
+
+[ext_resource type="Script" uid="uid://mwbuemuqygm3" path="res://addons/godot_shader_linker_(gsl)/UI/Module_UI/m_log.gd" id="1_lcum2"]
+[ext_resource type="StyleBox" uid="uid://db5gmvslnk7yq" path="res://addons/godot_shader_linker_(gsl)/UI/Style/Button_Normal.tres" id="1_ncig0"]
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_lcum2"]
+content_margin_left = 10.0
+content_margin_top = 10.0
+content_margin_right = 10.0
+content_margin_bottom = 10.0
+
+[sub_resource type="DPITexture" id="DPITexture_lcum2"]
+_source = "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" height=\"16\"><path fill=\"#ff5d5d\" d=\"M2 1v8.586l1.293-1.293a1 1 0 0 1 1.414 0L7 10.587l2.293-2.293a1 1 0 0 1 1.414 0L13 10.586l1-1V6H9V1H2zm8 0v4h4zm-6 9.414-2 2V15h12v-2.586l-.293.293a1 1 0 0 1-1.414 0L10 10.414l-2.293 2.293a1 1 0 0 1-1.414 0L4 10.414z\"/></svg>
+"
+
+[node name="LOG" type="PanelContainer"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_vertical = 3
+script = ExtResource("1_lcum2")
+
+[node name="HBoxContainer" type="HBoxContainer" parent="."]
+layout_mode = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="PanelContainer" type="Panel" parent="HBoxContainer/VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="Log" type="RichTextLabel" parent="HBoxContainer/VBoxContainer/PanelContainer"]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_vertical = 3
+focus_mode = 2
+mouse_filter = 1
+theme_override_styles/normal = SubResource("StyleBoxEmpty_lcum2")
+bbcode_enabled = true
+scroll_following = true
+context_menu_enabled = true
+selection_enabled = true
+deselect_on_focus_loss_enabled = false
+drag_and_drop_selection_enabled = false
+
+[node name="MarginContainer" type="MarginContainer" parent="HBoxContainer"]
+layout_mode = 2
+theme_override_constants/margin_left = 5
+theme_override_constants/margin_right = 5
+
+[node name="HBoxContainer2" type="HBoxContainer" parent="HBoxContainer/MarginContainer"]
+custom_minimum_size = Vector2(0, 30)
+layout_mode = 2
+size_flags_vertical = 0
+
+[node name="ClearButton" type="Button" parent="HBoxContainer/MarginContainer/HBoxContainer2"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(25, 25)
+layout_mode = 2
+size_flags_horizontal = 0
+theme_override_styles/normal = ExtResource("1_ncig0")
+icon = SubResource("DPITexture_lcum2")
+icon_alignment = 1
+
+[connection signal="pressed" from="HBoxContainer/MarginContainer/HBoxContainer2/ClearButton" to="." method="_on_clear_button_pressed"]

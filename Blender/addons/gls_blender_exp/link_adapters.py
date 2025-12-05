@@ -1,20 +1,7 @@
 # SPDX-FileCopyrightText: 2025 D.Jorkin
 # SPDX-License-Identifier: GPL-3.0-or-later
 
-"""
-Адаптеры связей: корректируют индексы входов с учётом арности операций узлов.
 
-Назначение:
-- Обеспечить согласование индексов сокетов Blender и экспортного формата.
-
-Экспортируемые сущности:
-- get_link_adapter(bl_idname: str) -> Optional[Callable]
-"""
-"""
-Адаптеры связей: приводят индексы сокетов Blender к индексам экспорта с учётом арности операции узла.
-Контракт: (to_node, to_socket, fallback_idx) -> Optional[int]
-Верните None, чтобы пропустить связь (например, сокет скрыт/неактивен для текущей операции).
-"""
 from typing import Callable, Optional
 
 

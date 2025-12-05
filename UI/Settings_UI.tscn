@@ -1,0 +1,88 @@
+[gd_scene load_steps=2 format=3 uid="uid://dy3in3dt7aaoj"]
+
+[ext_resource type="Script" uid="uid://clq7pvrmokqs6" path="res://addons/godot_shader_linker_(gsl)/UI/settings_ui.gd" id="1_5hpff"]
+
+[node name="Settings" type="MarginContainer"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 0
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 8
+script = ExtResource("1_5hpff")
+
+[node name="GridContainer" type="GridContainer" parent="."]
+layout_mode = 2
+columns = 2
+
+[node name="HBox3" type="HBoxContainer" parent="GridContainer"]
+layout_mode = 2
+
+[node name="Debug" type="Label" parent="GridContainer/HBox3"]
+custom_minimum_size = Vector2(300, 0)
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 1
+text = "Advanced Debugging GSL"
+horizontal_alignment = 2
+vertical_alignment = 1
+text_overrun_behavior = 3
+
+[node name="use_debug" type="CheckBox" parent="GridContainer/HBox3"]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="MarginContainer" type="MarginContainer" parent="GridContainer"]
+layout_mode = 2
+
+[node name="HBox" type="HBoxContainer" parent="GridContainer"]
+layout_mode = 2
+
+[node name="JSON" type="Label" parent="GridContainer/HBox"]
+custom_minimum_size = Vector2(300, 0)
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 1
+text = "Json Protocol Debug"
+horizontal_alignment = 2
+vertical_alignment = 1
+text_overrun_behavior = 3
+
+[node name="use_json" type="CheckBox" parent="GridContainer/HBox"]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="Save_Json" type="LineEdit" parent="GridContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+placeholder_text = "user://gsl_logs"
+emoji_menu_enabled = false
+
+[node name="HBox2" type="HBoxContainer" parent="GridContainer"]
+layout_mode = 2
+
+[node name="Tex" type="Label" parent="GridContainer/HBox2"]
+custom_minimum_size = Vector2(300, 0)
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 1
+text = "Texture Export from Blender"
+horizontal_alignment = 2
+vertical_alignment = 1
+text_overrun_behavior = 3
+
+[node name="Save_tex" type="LineEdit" parent="GridContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+placeholder_text = "res://GSL_Textures"
+emoji_menu_enabled = false
+
+[connection signal="toggled" from="GridContainer/HBox3/use_debug" to="." method="_on_use_debug_toggled"]
+[connection signal="toggled" from="GridContainer/HBox/use_json" to="." method="_on_use_json_toggled"]
+[connection signal="text_changed" from="GridContainer/Save_Json" to="." method="_on_save_json_text_changed"]
+[connection signal="text_changed" from="GridContainer/Save_tex" to="." method="_on_save_tex_text_changed"]

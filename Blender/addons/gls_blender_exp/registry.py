@@ -1,15 +1,6 @@
 # SPDX-Copyright (C) 2025 D.Jorkin
 # SPDX-License-Identifier: GPL-3.0-or-later
 
-"""
-Реестр обработчиков узлов Blender для экспортера GSL.
-
-Назначение:
-- Хранить соответствие bl_idname → функция-обработчик.
-
-Экспортируемые сущности:
-- get_node_handler(bl_idname: str) -> Optional[Callable]
-"""
 
 from typing import Callable, Optional
 

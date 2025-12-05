@@ -5,7 +5,7 @@
 class_name ShaderSaver
 extends Node
 
-var save_path: String = "res://addons/godot_shader_linker_(gsl)/Assets/Mat/"
+var save_path: String = "res://GSL_Textures"
 
 var file_dialog: EditorFileDialog
 var current_builder: ShaderBuilder
@@ -13,6 +13,8 @@ var waiting_uniform_textures := {}
 var waiting_material: ShaderMaterial
 var waiting_material_path: String = ""
 var fs_connected: bool = false
+var texture_copy_policy: String = "copy_if_outside"
+var current_material_name: String = ""
 
 func _enter_tree() -> void:
 	configure_file_dialog()
@@ -79,6 +81,8 @@ func save_material_file(path: String) -> void:
 		material.shader = Shader.new()
 	material.shader.code = current_builder.build_shader()
 
+	current_material_name = path.get_file().get_basename()
+
 	var no_pending := bind_available_textures_and_collect_waiting(material, current_builder)
 
 	var err = ResourceSaver.save(material, path, ResourceSaver.FLAG_REPLACE_SUBRESOURCE_PATHS)
@@ -90,14 +94,9 @@ func save_material_file(path: String) -> void:
 		subscribe_fs_signals_once()
 		var fs = EditorInterface.get_resource_filesystem()
 		if fs:
-			# Список ожидаемых путей
-			var wait_list: PackedStringArray = []
-			for uname in waiting_uniform_textures.keys():
-				wait_list.append(str(waiting_uniform_textures[uname]))
-			if fs.has_method("reimport_files"):
-				fs.call("reimport_files", wait_list)
-			else:
-				fs.scan()
+			fs.scan()
+	else:
+		current_material_name = ""
 
 func create_material(builder: ShaderBuilder) -> ShaderMaterial:
 	var material := ShaderMaterial.new()
@@ -116,6 +115,7 @@ func bind_available_textures_and_collect_waiting(material: ShaderMaterial, build
 	if builder.uniform_resources:
 		for uname in builder.uniform_resources.keys():
 			var res_path: String = str(builder.uniform_resources[uname])
+			res_path = ensure_texture_path(res_path, current_material_name)
 			if ResourceLoader.exists(res_path):
 				var tex := load(res_path) as Texture2D
 				if tex:
@@ -196,3 +196,40 @@ func handle_save_result(error: Error, path: String, type: String) -> void:
 		_:
 			var error_msg = "Save error %s (code %d)" % [type, error]
 			push_error(error_msg)
+
+
+func ensure_texture_path(raw_path: String, material_name: String) -> String:
+	if raw_path.is_empty():
+		return raw_path
+	# Если путь уже внутри res://, ничего не делаем
+	if raw_path.begins_with("res://"):
+		return raw_path
+	# Если политика не предполагает копирование, вернуть как есть
+	if texture_copy_policy != "copy_if_outside":
+		return raw_path
+	var abs_src := raw_path
+	if not abs_src.begins_with("user://") and not abs_src.begins_with("res://"):
+		abs_src = raw_path
+	var base_dir := save_path
+	if base_dir.is_empty():
+		base_dir = "res://GSL_Textures"
+	base_dir = base_dir.rstrip("/")
+	if not material_name.is_empty():
+		base_dir += "/" + material_name
+
+	var project_abs := ProjectSettings.globalize_path(base_dir)
+	var dir := DirAccess.open(project_abs)
+	if dir == null:
+		var mk_err := DirAccess.make_dir_recursive_absolute(project_abs)
+		if mk_err != OK:
+			return raw_path
+		dir = DirAccess.open(project_abs)
+	var file_name := raw_path.get_file()
+	var dst_abs := project_abs.path_join(file_name)
+	if FileAccess.file_exists(dst_abs):
+		var src_f := FileAccess.open(abs_src, FileAccess.READ)
+		var dst_f := FileAccess.open(dst_abs, FileAccess.READ)
+		if src_f and dst_f and src_f.get_length() == dst_f.get_length():
+			return base_dir + "/" + file_name
+	DirAccess.copy_absolute(abs_src, dst_abs)
+	return base_dir + "/" + file_name

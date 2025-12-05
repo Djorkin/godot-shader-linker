@@ -1,16 +1,7 @@
 # SPDX-FileCopyrightText: 2025 D.Jorkin
 # SPDX-License-Identifier: GPL-3.0-or-later
 
-"""
-Обработчик ShaderNodeSeparateColor для экспортера GSL.
 
-Задачи:
-- Проставить параметр mode: RGB=0, HSV=1, HSL=2.
-- Оставить вход Color как есть (экспортер уже положит незапитанное значение в params["color"]).
-
-Экспортируемые функции:
-- handle(n, node_info: dict, params: dict, mat) -> None
-"""
 
 from typing import Any
 

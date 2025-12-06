@@ -8,6 +8,8 @@ var Collector_inst : Collector = Collector.new()
 var Linker_inst : Linker = Linker.new()
 var Mapper_inst : Mapper = Mapper.new()
 var Builder_inst : ShaderBuilder = ShaderBuilder.new()
+var logger: GslLogger = GslLogger.get_logger()
+
 
 var NODE_CLASSES : Dictionary = {
 		"TexCoordModule": TextureCoordModule,
@@ -38,7 +40,7 @@ func instantiate_modules(data: Dictionary) -> Dictionary:
 		var node_type: String = node_dict.get("type", node_dict.get("class", ""))
 		var cls: Variant = NODE_CLASSES.get(node_type, null)
 		if cls == null:
-			push_warning("Blender node '%s' not supported" % node_type)
+			logger.log_warning("Blender node '%s' not supported" % node_type)
 			continue
 		var module: ShaderModule = cls.new()
 		node_table[node_dict.get("id")] = module
@@ -103,7 +105,7 @@ func link_modules(data: Dictionary, node_table: Dictionary) -> void:
 
 func build_chain(data: Dictionary) -> ShaderBuilder:
 	if not (data.has("nodes") and data.has("links")):
-		push_error("No nodes/links fields")
+		logger.log_error("No nodes/links fields")
 		return
 	
 	Mapper_inst.clear_chain(Collector_inst)

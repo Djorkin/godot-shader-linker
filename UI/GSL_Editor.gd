@@ -1,10 +1,10 @@
 @tool
 extends Control
 
-var Parser_inst : Parser
-var SSL_inst : ServerStatusListener 
-var Saver_inst : ShaderSaver 
-var GSL_logger : GslLogger
+var Parser_inst : Parser = Parser.new()
+var SSL_inst : ServerStatusListener = ServerStatusListener.new()
+var Saver_inst : ShaderSaver = ShaderSaver.new()
+var GSL_logger : GslLogger = GslLogger.get_logger()
 
 @onready var action_panel = %Action_Panel
 @onready var status_module = %Status_Panel
@@ -17,18 +17,13 @@ var save_mode: int = SaveMode.NONE
 signal request_cpu_data_update
 
 
-func _init() -> void:
-	Saver_inst = ShaderSaver.new()
-	GSL_logger = GslLogger.new()	
-	Parser_inst = Parser.new(GSL_logger)
-	SSL_inst = ServerStatusListener.new(GSL_logger)
-
-
 func _ready() -> void:
 	add_child(Saver_inst)
 	load_gsl_settings()
 	SSL_inst.server_status_changed.connect(_on_server_status_changed)
 	SSL_inst.check_server()
+	status_module.refresh_status.connect(_on_refresh_status)
+	SSL_inst.material_data_received.connect(_on_material_data_received)
 	Parser_inst.builder_ready.connect(builder_ready)
 	GSL_logger.message_emitted.connect(_on_log_message)
 	action_panel.create_shader.connect(_on_create_shader_pressed)
@@ -58,13 +53,21 @@ func update_server_status(status: ServerStatusListener.Status) -> void:
 func _on_log_message(text: String) -> void:
 	log_module.append_line(text)
 
+func _on_refresh_status() -> void:
+	if not SSL_inst:
+		return
+	GSL_logger.log_info("Refreshing server status")
+	SSL_inst.check_server()
+
 func _on_create_shader_pressed() -> void:
 	save_mode = SaveMode.SHADER
-	Parser_inst.send_request()
+	if _can_request_material():
+		SSL_inst.request_material()
 
 func _on_create_material_pressed() -> void:
 	save_mode = SaveMode.MATERIAL
-	Parser_inst.send_request()
+	if _can_request_material():
+		SSL_inst.request_material()
 
 func _on_cpu_data_pressed() -> void:
 	emit_signal("request_cpu_data_update")
@@ -119,7 +122,7 @@ func load_gsl_settings() -> void:
 func _on_save_tex_path_changed(path: String) -> void:
 	var cleaned := path.strip_edges()
 	if cleaned.is_empty():
-		return
+		cleaned = "res://GSL_Textures"
 	if not cleaned.begins_with("res://"):
 		cleaned = "res://" + cleaned.trim_prefix("res://")
 	if cleaned.ends_with("/"):
@@ -128,3 +131,21 @@ func _on_save_tex_path_changed(path: String) -> void:
 	ProjectSettings.save()
 	if Saver_inst:
 		Saver_inst.save_path = cleaned
+
+func _on_material_data_received(data: Dictionary) -> void:
+	Parser_inst.data_transfer(data)
+
+
+func _can_request_material() -> bool:
+	if not SSL_inst:
+		return false
+	match SSL_inst.current_status:
+		ServerStatusListener.Status.CONNECTED:
+			return true
+		ServerStatusListener.Status.DISCONNECTED:
+			GSL_logger.log_warning("Cannot link material: Blender server is disconnected")
+		ServerStatusListener.Status.CHECKING_PORT:
+			GSL_logger.log_warning("Still checking Blender server status, please wait")
+		ServerStatusListener.Status.ERROR:
+			GSL_logger.log_error("Cannot link material: Blender server is in error state")
+	return false

@@ -4,7 +4,9 @@
 @tool
 class_name ServerStatusListener
 
-const SERVER_URL := Parser.SERVER_URL
+
+const SERVER_URL := "http://127.0.0.1:5050/link"
+
 
 enum Status {
 	CONNECTED,
@@ -16,15 +18,11 @@ enum Status {
 var udp: PacketPeerUDP
 var udp_port: int = 6020
 var udp_bind_failed: bool = false
-var logger: GslLogger
+var logger: GslLogger = GslLogger.get_logger()
 var current_status: Status = Status.DISCONNECTED
 
 signal server_status_changed(status: Status)
-
-
-func _init(new_logger: GslLogger, p_port: int = 6020):
-	logger = new_logger
-	udp_port = p_port
+signal material_data_received(data: Dictionary)
 
 
 func set_status(status: Status) -> void:
@@ -73,7 +71,7 @@ func check_server() -> void:
 		var err := http.request(SERVER_URL)
 		if err != OK:
 			set_status(Status.DISCONNECTED)
-			logger.log_warning("[color=yellow]Failed to send status request (%s)[/color]" % err)
+			logger.log_warning("Failed to send status request (%s)" % err)
 			http.queue_free()
 
 
@@ -83,21 +81,73 @@ func _on_status_request_completed(result: int, response_code: int, headers: Pack
 	
 	if result != HTTPRequest.RESULT_SUCCESS:
 		set_status(Status.DISCONNECTED)
-		logger.log_warning("[color=yellow]Blender server is not available (result %d)[/color]" % result)
+		logger.log_warning("Blender server is not available (result %d)" % result)
 		return
 	
 	if response_code != 200:
 		set_status(Status.ERROR)
-		logger.log_error("[color=red]Blender server returned code %d[/color]" % response_code)
+		logger.log_error("Blender server returned code %d" % response_code)
 		return
 	
 	if body.is_empty():
 		set_status(Status.ERROR)
-		logger.log_error("[color=red]Empty response from Blender server[/color]")
+		logger.log_error("Empty response from Blender server")
 		return
 	
 	set_status(Status.CONNECTED)
 
+
+func request_material() -> void:
+	var main_loop := Engine.get_main_loop()
+	if not (main_loop and main_loop is SceneTree):
+		logger.log_error("SceneTree not found – request_material should be called from editor")
+		return
+	var tree: SceneTree = main_loop
+	var http := HTTPRequest.new()
+	tree.root.add_child(http)
+	http.request_completed.connect(_on_material_request_completed.bind(http))
+	var err := http.request(SERVER_URL)
+	if err != OK:
+		logger.log_error("Failed to send material request (%s)" % err)
+		set_status(Status.DISCONNECTED)
+		http.queue_free()
+
+func _on_material_request_completed(result: int, response_code: int, headers: PackedStringArray, body: PackedByteArray, http: HTTPRequest) -> void:
+	if is_instance_valid(http):
+		http.queue_free()
+	
+	if result != HTTPRequest.RESULT_SUCCESS:
+		set_status(Status.DISCONNECTED)
+		logger.log_error("Blender server is not available (result %d)" % result)
+		return
+	
+	if response_code != 200:
+		set_status(Status.ERROR)
+		logger.log_error("Blender server returned code %d" % response_code)
+		return
+	
+	if body.is_empty():
+		set_status(Status.ERROR)
+		logger.log_error("Empty response from Blender server")
+		return
+	
+	var text := body.get_string_from_utf8()
+	var data = JSON.parse_string(text)
+	
+	if typeof(data) != TYPE_DICTIONARY:
+		set_status(Status.ERROR)
+		logger.log_error("Invalid JSON or response format")
+		return
+	
+	if data.has("nodes") and data.has("links"):
+		var nodes = data["nodes"].size()
+		var links = data["links"].size()
+		logger.log_info("Blender server → nodes=" + str(nodes) + ", links=" + str(links))
+	else:
+		logger.log_info("Blender server → " + str(data))
+	
+	set_status(Status.CONNECTED)
+	material_data_received.emit(data)
 
 
 func shutdown() -> void:
@@ -114,7 +164,7 @@ func ensure_udp_bound() -> void:
 	var err := udp.bind(udp_port, "127.0.0.1")
 	if err != OK:
 		udp_bind_failed = true
-		logger.log_warning("[color=yellow]Failed to bind UDP port %d (%s)[/color]" % [udp_port, str(err)])
+		logger.log_warning("Failed to bind UDP port %d (%s)" % [udp_port, str(err)])
 		udp = null
 
 

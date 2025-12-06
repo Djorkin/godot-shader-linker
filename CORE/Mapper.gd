@@ -7,8 +7,7 @@ class_name Mapper
 var current_chain: Array[ShaderModule] = []
 var original_modules: Dictionary = {}
 var module_links: Dictionary = {}
-
-
+var logger: GslLogger = GslLogger.get_logger()
 func get_active_modules() -> Array[ShaderModule]:
 	return current_chain.duplicate() as Array[ShaderModule]
 
@@ -22,7 +21,7 @@ func add_module(module: ShaderModule, params: Dictionary = {}) -> void:
 			if pname in module.get_uniform_definitions():
 				module.set_uniform_override(pname, params[pname])
 			else:
-				push_warning("Mapper: parameter '%s' not found in module %s" % [pname, module.module_name])
+				logger.log_warning("Mapper: parameter '%s' not found in module %s" % [pname, module.module_name])
 
 	#var mark = module.get_mark()
 	
@@ -52,7 +51,7 @@ func build_final_chain() -> Array[ShaderModule]:
 		if not module_links.has(module.unique_id):
 			final_chain.append(module)
 	
-	#print("Final chain size: ", final_chain.size())
+	logger.log_debug("Final chain size: %d" % final_chain.size())
 	return final_chain
 
 func clear_chain(collector : Collector) -> void:
@@ -67,40 +66,3 @@ func has_property(obj: Object, name: String) -> bool:
 			return true
 	return false
 
-
-## Test chain
-#func create_sample_chain() -> void:
-	#clear_chain()
-#
-	#var tex_coord = TextureCoordModule.new()
-	#var mapping = MappingModule.new()
-	#var tex_image = TextureImageModule.new()
-	#var bump = BumpModule.new()
-	#var principled = PrincipledBSDFModule.new()
-	#var out = OutputModule.new()
-#
-	#add_module(tex_coord)
-	#add_module(mapping, {
-		#"mapping_type": MappingModule.MappingType.VECTOR
-	#})
-	#add_module(principled)
-	#add_module(tex_image, {
-		#"interpolation": TextureImageModule.InterpolationType.CUBIC,
-		#"extension": TextureImageModule.ExtensionType.EXTEND
-	#})
-	#add_module(bump)
-	#add_module(out)
-#
-	#var final_chain: Array[ShaderModule] = build_final_chain()
-#
-	#clear_chain()
-#
-	#for module in final_chain:
-		#Collector.register_module(module)
-#
-	#Linker.link_modules(tex_coord, 0, mapping, 0)
-	#Linker.link_modules(mapping, 0, tex_image, 0)
-	#Linker.link_modules(tex_image, 0, bump, 3)
-	#Linker.link_modules(tex_image, 0, principled, 0)
-	#Linker.link_modules(bump, 0, principled, 5)
-	#Linker.link_modules(principled, 0, out, 0)

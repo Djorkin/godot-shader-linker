@@ -15,6 +15,9 @@ var waiting_material_path: String = ""
 var fs_connected: bool = false
 var texture_copy_policy: String = "copy_if_outside"
 var current_material_name: String = ""
+var logger: GslLogger = GslLogger.get_logger()
+
+
 
 func _enter_tree() -> void:
 	configure_file_dialog()
@@ -51,7 +54,7 @@ func save_shader_file(path: String) -> void:
 	if ResourceLoader.exists(path):
 		shader = load(path) as Shader
 		if shader == null:
-			push_error("Failed to load existing shader: %s" % path)
+			logger.log_error("Failed to load existing shader: %s" % path)
 			return
 	else:
 		shader = Shader.new()
@@ -64,14 +67,14 @@ func save_shader_file(path: String) -> void:
 
 func save_material_file(path: String) -> void:
 	if not current_builder:
-		push_error("ShaderBuilder is not initialized!")
+		logger.log_error("ShaderBuilder is not initialized!")
 		return
 	
 	var material: ShaderMaterial
 	if ResourceLoader.exists(path):
 		material = load(path) as ShaderMaterial
 		if material == null:
-			push_error("File exists but is not a ShaderMaterial: %s" % path)
+			logger.log_error("File exists but is not a ShaderMaterial: %s" % path)
 			return
 	else:
 		material = create_material(current_builder)
@@ -79,12 +82,10 @@ func save_material_file(path: String) -> void:
 	
 	if material.shader == null:
 		material.shader = Shader.new()
+	
 	material.shader.code = current_builder.build_shader()
-
 	current_material_name = path.get_file().get_basename()
-
 	var no_pending := bind_available_textures_and_collect_waiting(material, current_builder)
-
 	var err = ResourceSaver.save(material, path, ResourceSaver.FLAG_REPLACE_SUBRESOURCE_PATHS)
 	handle_save_result(err, path, "Material")
 
@@ -108,7 +109,7 @@ func create_material(builder: ShaderBuilder) -> ShaderMaterial:
 func bind_available_textures_and_collect_waiting(material: ShaderMaterial, builder: ShaderBuilder) -> bool:
 	waiting_uniform_textures.clear()
 	if not builder:
-		print_rich("[color=yellow]GSL[/color] No builder, nothing to bind")
+		logger.log_warning("No builder, nothing to bind")
 		return true
 	var bound := 0
 	var waiting := 0
@@ -122,7 +123,7 @@ func bind_available_textures_and_collect_waiting(material: ShaderMaterial, build
 					material.set_shader_parameter(uname, tex)
 					bound += 1
 				else:
-					push_warning("Failed to load Texture2D: %s" % res_path)
+					logger.log_warning("Failed to load Texture2D: %s" % res_path)
 			else:
 				waiting_uniform_textures[uname] = res_path
 				waiting += 1
@@ -132,7 +133,7 @@ func bind_available_textures_and_collect_waiting(material: ShaderMaterial, build
 			if res and res is Texture2D:
 				material.set_shader_parameter(oname, res)
 				bound += 1
-	#print_rich("[color=yellow]GSL[/color] Bound: %d, pending: %d" % [bound, waiting])
+	#print_rich("Bound: %d, pending: %d" % [bound, waiting])
 	return waiting_uniform_textures.is_empty()
 
 func subscribe_fs_signals_once() -> void:
@@ -140,7 +141,7 @@ func subscribe_fs_signals_once() -> void:
 		return
 	var fs = EditorInterface.get_resource_filesystem()
 	if not fs:
-		push_warning("FS is unavailable, cannot track resource import")
+		logger.log_warning("FS is unavailable, cannot track resource import")
 		return
 	if not fs.is_connected("filesystem_changed", Callable(self, "_on_fs_changed")):
 		fs.filesystem_changed.connect(self._on_fs_changed)
@@ -191,11 +192,10 @@ func finalize_waiting_if_ready() -> void:
 func handle_save_result(error: Error, path: String, type: String) -> void:
 	match error:
 		OK:
-			print_rich("[color=green]%s saved successfully:[/color] %s" % [type, path])
+			logger.log_success("%s saved successfully: %s" % [type, path])
 			EditorInterface.get_resource_filesystem().scan()
 		_:
-			var error_msg = "Save error %s (code %d)" % [type, error]
-			push_error(error_msg)
+			logger.log_error("Save error %s (code %d)" % [type, error])
 
 
 func ensure_texture_path(raw_path: String, material_name: String) -> String:

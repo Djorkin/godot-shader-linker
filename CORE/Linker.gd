@@ -4,6 +4,7 @@
 @tool
 class_name Linker
 
+var logger: GslLogger = GslLogger.get_logger()
 
 func link_modules(
 	source_module: ShaderModule, 
@@ -13,14 +14,14 @@ func link_modules(
 	
 	var output_sockets = source_module.get_output_sockets()
 	if socket_out_id >= output_sockets.size():
-		push_error("Invalid output socket index: %d" % socket_out_id)
+		logger.log_error("Invalid output socket index: %d" % socket_out_id)
 		return
 	
 	var output_socket = output_sockets[socket_out_id]
 	
 	var input_sockets = target_module.get_input_sockets()
 	if socket_in_id >= input_sockets.size():
-		push_error("Invalid input socket index: %d" % socket_in_id)
+		logger.log_error("Invalid input socket index: %d" % socket_in_id)
 		return
 	
 	var input_socket = input_sockets[socket_in_id]
@@ -28,7 +29,7 @@ func link_modules(
 	var out_type_name: String = output_socket.type_name()
 	var in_type_name: String = input_socket.type_name()
 	if not SocketCompatibility.is_compatible(out_type_name, in_type_name):
-		push_error("Incompatible socket types: %s -> %s" % [out_type_name, in_type_name])
+		logger.log_error("Incompatible socket types: %s -> %s" % [out_type_name, in_type_name])
 		return
 	
 	input_socket.source = output_socket

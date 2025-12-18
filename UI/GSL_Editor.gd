@@ -14,8 +14,6 @@ var GSL_logger : GslLogger = GslLogger.get_logger()
 enum SaveMode { NONE, SHADER, MATERIAL }
 var save_mode: int = SaveMode.NONE
 
-signal request_cpu_data_update
-
 
 func _ready() -> void:
 	add_child(Saver_inst)
@@ -28,7 +26,7 @@ func _ready() -> void:
 	GSL_logger.message_emitted.connect(_on_log_message)
 	action_panel.create_shader.connect(_on_create_shader_pressed)
 	action_panel.create_material.connect(_on_create_material_pressed)
-	action_panel.cpu_data.connect(_on_cpu_data_pressed)
+	action_panel.bake_aabb.connect(_on_bake_aabb_pressed)
 	settings_ui.debug_logging_changed.connect(_on_debug_logging_changed)
 	settings_ui.json_debug_changed.connect(_on_json_debug_changed)
 	settings_ui.json_dir_path_changed.connect(_on_json_dir_path_changed)
@@ -69,8 +67,9 @@ func _on_create_material_pressed() -> void:
 	if _can_request_material():
 		SSL_inst.request_material()
 
-func _on_cpu_data_pressed() -> void:
-	emit_signal("request_cpu_data_update")
+func _on_bake_aabb_pressed() -> void:
+	AabbBake.bake_subtree(get_tree().get_edited_scene_root())
+	GSL_logger.log_success("AABB baked")
 
 func builder_ready(builder: ShaderBuilder) -> void:
 	if save_mode == SaveMode.SHADER:
@@ -105,7 +104,7 @@ func load_gsl_settings() -> void:
 	var base_dir := str(ProjectSettings.get_setting("gsl/texture_base_dir", "res://GSL_Textures"))
 
 	if Saver_inst:
-		Saver_inst.save_path = base_dir
+		Saver_inst.texture_base_dir = base_dir
 
 	GSL_logger.debug_logging = debug_enabled
 	Parser_inst.json_debug_enabled = json_enabled
@@ -130,7 +129,7 @@ func _on_save_tex_path_changed(path: String) -> void:
 	ProjectSettings.set_setting("gsl/texture_base_dir", cleaned)
 	ProjectSettings.save()
 	if Saver_inst:
-		Saver_inst.save_path = cleaned
+		Saver_inst.texture_base_dir = cleaned
 
 func _on_material_data_received(data: Dictionary) -> void:
 	Parser_inst.data_transfer(data)

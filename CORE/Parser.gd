@@ -26,7 +26,7 @@ func data_transfer(data: Dictionary) -> void:
 func set_json_dir_path(path: String) -> void:
 	var cleaned := path.strip_edges()
 	if cleaned.is_empty():
-		logger.log_warning("JSON debug path is empty. Keeping previous: " + json_dir_path)
+		logger.log_debug("JSON debug path is empty. Keeping previous: " + json_dir_path)
 		return
 	if not (cleaned.begins_with("user://") or cleaned.begins_with("res://")):
 		logger.log_warning("JSON debug path must start with user:// or res:// (got: %s)" % cleaned)

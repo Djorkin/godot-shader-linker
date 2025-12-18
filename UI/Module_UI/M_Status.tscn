@@ -1,49 +1,66 @@
-[gd_scene load_steps=5 format=3 uid="uid://bwf0alcy3hvh8"]
+[gd_scene load_steps=6 format=3 uid="uid://bwf0alcy3hvh8"]
 
 [ext_resource type="Script" uid="uid://bhpxmcbuxer0d" path="res://addons/godot_shader_linker_(gsl)/UI/Module_UI/m_status.gd" id="1_hskar"]
 [ext_resource type="Shader" uid="uid://6onovx2o2ako" path="res://addons/godot_shader_linker_(gsl)/UI/status_dot.gdshader" id="2_hskar"]
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_hskar"]
+[sub_resource type="DPITexture" id="DPITexture_hskar"]
+_source = "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" height=\"16\"><path fill=\"#ff5d5d\" d=\"M2 1v8.586l1.293-1.293a1 1 0 0 1 1.414 0L7 10.587l2.293-2.293a1 1 0 0 1 1.414 0L13 10.586l1-1V6H9V1H2zm8 0v4h4zm-6 9.414-2 2V15h12v-2.586l-.293.293a1 1 0 0 1-1.414 0L10 10.414l-2.293 2.293a1 1 0 0 1-1.414 0L4 10.414z\"/></svg>
+"
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_ldcia"]
 shader = ExtResource("2_hskar")
 shader_parameter/dot_color = Color(0.74509805, 0.74509805, 0.74509805, 1)
-shader_parameter/radius = 0.07
-shader_parameter/edge_smooth = 0.17
+shader_parameter/radius = 0.1
+shader_parameter/edge_smooth = 0.1
 
 [sub_resource type="CanvasTexture" id="CanvasTexture_ldcia"]
 
-[node name="Status_Panel" type="PanelContainer"]
+[node name="Status_Panel" type="MarginContainer"]
 custom_minimum_size = Vector2(0, 30)
 anchors_preset = -1
 anchor_right = 1.0
 anchor_bottom = 0.042000003
-offset_bottom = -5.2400017
+offset_bottom = -0.24000168
 grow_horizontal = 2
+theme_override_constants/margin_left = 5
+theme_override_constants/margin_right = 5
 script = ExtResource("1_hskar")
 
-[node name="HBoxContainer" type="HBoxContainer" parent="."]
+[node name="Panel" type="Panel" parent="."]
 layout_mode = 2
 
-[node name="ColorRect" type="TextureRect" parent="HBoxContainer"]
+[node name="HBoxContainer" type="HBoxContainer" parent="Panel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 0
+
+[node name="Button" type="Button" parent="Panel/HBoxContainer"]
 unique_name_in_owner = true
-material = SubResource("ShaderMaterial_hskar")
+custom_minimum_size = Vector2(25, 25)
+layout_mode = 2
+size_flags_horizontal = 8
+icon = SubResource("DPITexture_hskar")
+icon_alignment = 1
+
+[node name="ColorRect" type="TextureRect" parent="Panel/HBoxContainer"]
+unique_name_in_owner = true
+material = SubResource("ShaderMaterial_ldcia")
 custom_minimum_size = Vector2(25, 25)
 layout_mode = 2
 texture = SubResource("CanvasTexture_ldcia")
 expand_mode = 2
 
-[node name="Status" type="Label" parent="HBoxContainer"]
+[node name="Status" type="Label" parent="Panel/HBoxContainer"]
 layout_mode = 2
 text = "Status:"
 
-[node name="Info" type="Label" parent="HBoxContainer"]
+[node name="Info" type="Label" parent="Panel/HBoxContainer"]
 unique_name_in_owner = true
 layout_mode = 2
 text = "Disconnected from Blender"
 
-[node name="Button" type="Button" parent="HBoxContainer"]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(25, 25)
-layout_mode = 2
-size_flags_horizontal = 10
-
-[connection signal="pressed" from="HBoxContainer/Button" to="." method="_on_button_pressed"]
+[connection signal="pressed" from="Panel/HBoxContainer/Button" to="." method="_on_button_pressed"]

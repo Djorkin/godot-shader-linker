@@ -13,6 +13,12 @@ signal json_dir_path_changed(path: String)
 signal save_tex_path_changed(path: String)
 
 
+func _ready() -> void:
+	save_json.placeholder_text = "user://gsl_logs"
+	save_tex.placeholder_text = "res://GSL_Textures"
+	save_json.editable = ProjectSettings.get_setting("gsl/json_debug_enabled", false)
+
+
 func set_debug_logging_enabled(enabled: bool) -> void:
 	use_debug.button_pressed = enabled
 

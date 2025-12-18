@@ -5,7 +5,8 @@
 class_name ShaderSaver
 extends Node
 
-var save_path: String = "res://GSL_Textures"
+var save_path: String = "res://"
+var texture_base_dir: String = "res://GSL_Textures"
 
 var file_dialog: EditorFileDialog
 var current_builder: ShaderBuilder
@@ -50,6 +51,7 @@ func _on_file_selected(path: String) -> void:
 		save_material_file(path)
 
 func save_shader_file(path: String) -> void:
+	save_path = path.get_base_dir()
 	var shader: Shader
 	if ResourceLoader.exists(path):
 		shader = load(path) as Shader
@@ -69,6 +71,8 @@ func save_material_file(path: String) -> void:
 	if not current_builder:
 		logger.log_error("ShaderBuilder is not initialized!")
 		return
+	
+	save_path = path.get_base_dir()
 	
 	var material: ShaderMaterial
 	if ResourceLoader.exists(path):
@@ -201,7 +205,6 @@ func handle_save_result(error: Error, path: String, type: String) -> void:
 func ensure_texture_path(raw_path: String, material_name: String) -> String:
 	if raw_path.is_empty():
 		return raw_path
-	# Если путь уже внутри res://, ничего не делаем
 	if raw_path.begins_with("res://"):
 		return raw_path
 	# Если политика не предполагает копирование, вернуть как есть
@@ -210,7 +213,7 @@ func ensure_texture_path(raw_path: String, material_name: String) -> String:
 	var abs_src := raw_path
 	if not abs_src.begins_with("user://") and not abs_src.begins_with("res://"):
 		abs_src = raw_path
-	var base_dir := save_path
+	var base_dir := texture_base_dir
 	if base_dir.is_empty():
 		base_dir = "res://GSL_Textures"
 	base_dir = base_dir.rstrip("/")

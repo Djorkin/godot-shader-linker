@@ -56,11 +56,11 @@ theme_override_constants/margin_top = 1
 theme_override_constants/margin_right = 12
 theme_override_constants/margin_bottom = 1
 
-[node name="CPU DATA" type="Button" parent="VBoxContainer/MarginContainer3"]
+[node name="Bake AABB" type="Button" parent="VBoxContainer/MarginContainer3"]
 layout_mode = 2
 size_flags_vertical = 3
 theme_override_styles/normal = ExtResource("1_ombio")
-text = "CPU DATA"
+text = "Bake AABB"
 
 [node name="MarginContainer5" type="MarginContainer" parent="VBoxContainer"]
 layout_mode = 2
@@ -70,10 +70,12 @@ theme_override_constants/margin_top = 4
 theme_override_constants/margin_right = 10
 theme_override_constants/margin_bottom = 4
 
-[node name="Label" type="Label" parent="VBoxContainer/MarginContainer5"]
+[node name="Label" type="LinkButton" parent="VBoxContainer/MarginContainer5"]
 layout_mode = 2
 text = "GSL v.0.3"
+underline = 1
+uri = "https://github.com/Djorkin/godot-shader-linker"
 
 [connection signal="pressed" from="VBoxContainer/MarginContainer/Create Shader" to="." method="_on_create_shader_pressed"]
 [connection signal="pressed" from="VBoxContainer/MarginContainer2/Create Material" to="." method="_on_create_material_pressed"]
-[connection signal="pressed" from="VBoxContainer/MarginContainer3/CPU DATA" to="." method="_on_cpu_data_pressed"]
+[connection signal="pressed" from="VBoxContainer/MarginContainer3/Bake AABB" to="." method="_on_bake_aabb_pressed"]

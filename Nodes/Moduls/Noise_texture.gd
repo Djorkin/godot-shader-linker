@@ -81,6 +81,11 @@ func get_uniform_definitions() -> Dictionary:
             pass
         u[s.name.to_lower()] = uniform_def
 
+    if u.has("detail"):
+        u["detail"] = [ShaderSpec.ShaderType.FLOAT, u["detail"].get("default", detail), ShaderSpec.UniformHint.RANGE, {"min": 0.0, "max": 15.0, "step": 0.1}]
+    if u.has("roughness"):
+        u["roughness"] = [ShaderSpec.ShaderType.FLOAT, u["roughness"].get("default", roughness), ShaderSpec.UniformHint.RANGE, {"min": 0.0, "max": 1.0, "step": 0.01}]
+
     return u
 
 func get_code_blocks() -> Dictionary:

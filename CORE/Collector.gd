@@ -7,7 +7,7 @@ var SV_inst := SharedVaryings.new()
 var requested_vars: Array = []
 var registered_modules := {}
 var eval_ctx_declared := false
-
+var logger: GslLogger = GslLogger.get_logger()
 
 func get_all_input_sockets() -> Array[InputSocket]:
 	var sockets: Array[InputSocket] = []
@@ -85,7 +85,6 @@ func configure_includes(builder: ShaderBuilder, modules: Array) -> void:
 #region Evaluation functions
 
 func configure_eval_functions(builder: ShaderBuilder, modules: Array) -> void:
-	# For every Bump module that has a connected Height input, build eval function
 	for module in modules:
 		if not module or not module.has_method("get_input_sockets"):
 			continue
@@ -104,7 +103,6 @@ func configure_eval_functions(builder: ShaderBuilder, modules: Array) -> void:
 		build_eval_for_bump(builder, module, height_idx)
 
 func precompute_eval_metadata(builder: ShaderBuilder, modules: Array) -> void:
-	# Ensure EvalCtx is declared early for Bump code that uses it in fragment
 	if not eval_ctx_declared:
 		var eval_ctx_code := """
 		struct EvalCtx {
@@ -304,9 +302,9 @@ func topological_sort() -> Array:
 	for module in registered_modules.values():
 		visit(module, visited, order)
 	
-	#print("Execution order of modules:") 
-	#for module in order:
-		#print("- %s (%s)" % [module.module_name, module.unique_id])
+	logger.log_debug("Execution order of modules:") 
+	for module in order:
+		logger.log_debug("- %s (%s)" % [module.module_name, module.unique_id])
 	
 	return order
 
@@ -315,12 +313,12 @@ func visit(module, visited: Dictionary, order: Array) -> void:
 		if visited[module]:
 			return
 		else:
-			push_error("Cycle dependency detected!")
+			logger.log_error("Cycle dependency detected!")
 		return
 	
 	visited[module] = false
 	for dependency in module.get_dependency():
-		#print("Module %s depends on %s" % [module.unique_id, dependency.unique_id])
+		logger.log_debug("Module %s depends on %s" % [module.unique_id, dependency.unique_id])
 		visit(dependency, visited, order)
 	
 	visited[module] = true

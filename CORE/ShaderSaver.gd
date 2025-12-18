@@ -5,7 +5,8 @@
 class_name ShaderSaver
 extends Node
 
-var save_path: String = "res://addons/godot_shader_linker_(gsl)/Assets/Mat/"
+var save_path: String = "res://"
+var texture_base_dir: String = "res://GSL_Textures"
 
 var file_dialog: EditorFileDialog
 var current_builder: ShaderBuilder
@@ -13,6 +14,11 @@ var waiting_uniform_textures := {}
 var waiting_material: ShaderMaterial
 var waiting_material_path: String = ""
 var fs_connected: bool = false
+var texture_copy_policy: String = "copy_if_outside"
+var current_material_name: String = ""
+var logger: GslLogger = GslLogger.get_logger()
+
+
 
 func _enter_tree() -> void:
 	configure_file_dialog()
@@ -45,11 +51,12 @@ func _on_file_selected(path: String) -> void:
 		save_material_file(path)
 
 func save_shader_file(path: String) -> void:
+	save_path = path.get_base_dir()
 	var shader: Shader
 	if ResourceLoader.exists(path):
 		shader = load(path) as Shader
 		if shader == null:
-			push_error("Failed to load existing shader: %s" % path)
+			logger.log_error("Failed to load existing shader: %s" % path)
 			return
 	else:
 		shader = Shader.new()
@@ -62,14 +69,16 @@ func save_shader_file(path: String) -> void:
 
 func save_material_file(path: String) -> void:
 	if not current_builder:
-		push_error("ShaderBuilder is not initialized!")
+		logger.log_error("ShaderBuilder is not initialized!")
 		return
+	
+	save_path = path.get_base_dir()
 	
 	var material: ShaderMaterial
 	if ResourceLoader.exists(path):
 		material = load(path) as ShaderMaterial
 		if material == null:
-			push_error("File exists but is not a ShaderMaterial: %s" % path)
+			logger.log_error("File exists but is not a ShaderMaterial: %s" % path)
 			return
 	else:
 		material = create_material(current_builder)
@@ -77,10 +86,10 @@ func save_material_file(path: String) -> void:
 	
 	if material.shader == null:
 		material.shader = Shader.new()
+	
 	material.shader.code = current_builder.build_shader()
-
+	current_material_name = path.get_file().get_basename()
 	var no_pending := bind_available_textures_and_collect_waiting(material, current_builder)
-
 	var err = ResourceSaver.save(material, path, ResourceSaver.FLAG_REPLACE_SUBRESOURCE_PATHS)
 	handle_save_result(err, path, "Material")
 
@@ -90,14 +99,9 @@ func save_material_file(path: String) -> void:
 		subscribe_fs_signals_once()
 		var fs = EditorInterface.get_resource_filesystem()
 		if fs:
-			# Список ожидаемых путей
-			var wait_list: PackedStringArray = []
-			for uname in waiting_uniform_textures.keys():
-				wait_list.append(str(waiting_uniform_textures[uname]))
-			if fs.has_method("reimport_files"):
-				fs.call("reimport_files", wait_list)
-			else:
-				fs.scan()
+			fs.scan()
+	else:
+		current_material_name = ""
 
 func create_material(builder: ShaderBuilder) -> ShaderMaterial:
 	var material := ShaderMaterial.new()
@@ -108,25 +112,32 @@ func create_material(builder: ShaderBuilder) -> ShaderMaterial:
 
 func bind_available_textures_and_collect_waiting(material: ShaderMaterial, builder: ShaderBuilder) -> bool:
 	waiting_uniform_textures.clear()
-	if not builder or not builder.uniform_resources:
-		print_rich("[color=yellow]GSL[/color] No textures to bind")
+	if not builder:
+		logger.log_warning("No builder, nothing to bind")
 		return true
 	var bound := 0
 	var waiting := 0
-	for uname in builder.uniform_resources.keys():
-		var res_path: String = str(builder.uniform_resources[uname])
-		if ResourceLoader.exists(res_path):
-			var tex := load(res_path) as Texture2D
-			if tex:
-				material.set_shader_parameter(uname, tex)
-				#print_rich("[color=green]GSL[/color] Bound %s ← %s" % [uname, res_path])
+	if builder.uniform_resources:
+		for uname in builder.uniform_resources.keys():
+			var res_path: String = str(builder.uniform_resources[uname])
+			res_path = ensure_texture_path(res_path, current_material_name)
+			if ResourceLoader.exists(res_path):
+				var tex := load(res_path) as Texture2D
+				if tex:
+					material.set_shader_parameter(uname, tex)
+					bound += 1
+				else:
+					logger.log_warning("Failed to load Texture2D: %s" % res_path)
 			else:
-				push_warning("Failed to load Texture2D: %s" % res_path)
-		else:
-			waiting_uniform_textures[uname] = res_path
-			waiting += 1
-			#print_rich("[color=yellow]GSL[/color] Awaiting import: %s" % res_path)
-	#print_rich("[color=yellow]GSL[/color] Bound: %d, pending: %d" % [bound, waiting])
+				waiting_uniform_textures[uname] = res_path
+				waiting += 1
+	if builder.uniform_object_resources:
+		for oname in builder.uniform_object_resources.keys():
+			var res: Resource = builder.uniform_object_resources[oname]
+			if res and res is Texture2D:
+				material.set_shader_parameter(oname, res)
+				bound += 1
+	#print_rich("Bound: %d, pending: %d" % [bound, waiting])
 	return waiting_uniform_textures.is_empty()
 
 func subscribe_fs_signals_once() -> void:
@@ -134,7 +145,7 @@ func subscribe_fs_signals_once() -> void:
 		return
 	var fs = EditorInterface.get_resource_filesystem()
 	if not fs:
-		push_warning("FS is unavailable, cannot track resource import")
+		logger.log_warning("FS is unavailable, cannot track resource import")
 		return
 	if not fs.is_connected("filesystem_changed", Callable(self, "_on_fs_changed")):
 		fs.filesystem_changed.connect(self._on_fs_changed)
@@ -185,8 +196,43 @@ func finalize_waiting_if_ready() -> void:
 func handle_save_result(error: Error, path: String, type: String) -> void:
 	match error:
 		OK:
-			print_rich("[color=green]%s saved successfully:[/color] %s" % [type, path])
+			logger.log_success("%s saved successfully: %s" % [type, path])
 			EditorInterface.get_resource_filesystem().scan()
 		_:
-			var error_msg = "Save error %s (code %d)" % [type, error]
-			push_error(error_msg)
+			logger.log_error("Save error %s (code %d)" % [type, error])
+
+
+func ensure_texture_path(raw_path: String, material_name: String) -> String:
+	if raw_path.is_empty():
+		return raw_path
+	if raw_path.begins_with("res://"):
+		return raw_path
+	# Если политика не предполагает копирование, вернуть как есть
+	if texture_copy_policy != "copy_if_outside":
+		return raw_path
+	var abs_src := raw_path
+	if not abs_src.begins_with("user://") and not abs_src.begins_with("res://"):
+		abs_src = raw_path
+	var base_dir := texture_base_dir
+	if base_dir.is_empty():
+		base_dir = "res://GSL_Textures"
+	base_dir = base_dir.rstrip("/")
+	if not material_name.is_empty():
+		base_dir += "/" + material_name
+
+	var project_abs := ProjectSettings.globalize_path(base_dir)
+	var dir := DirAccess.open(project_abs)
+	if dir == null:
+		var mk_err := DirAccess.make_dir_recursive_absolute(project_abs)
+		if mk_err != OK:
+			return raw_path
+		dir = DirAccess.open(project_abs)
+	var file_name := raw_path.get_file()
+	var dst_abs := project_abs.path_join(file_name)
+	if FileAccess.file_exists(dst_abs):
+		var src_f := FileAccess.open(abs_src, FileAccess.READ)
+		var dst_f := FileAccess.open(dst_abs, FileAccess.READ)
+		if src_f and dst_f and src_f.get_length() == dst_f.get_length():
+			return base_dir + "/" + file_name
+	DirAccess.copy_absolute(abs_src, dst_abs)
+	return base_dir + "/" + file_name

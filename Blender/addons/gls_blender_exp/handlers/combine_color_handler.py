@@ -1,17 +1,7 @@
 # SPDX-FileCopyrightText: 2025 D.Jorkin
 # SPDX-License-Identifier: GPL-3.0-or-later
 
-"""
-Обработчик ShaderNodeCombineColor для экспортера GSL.
 
-Задачи:
-- Проставить параметр mode: RGB=0, HSV=1, HSL=2.
-- Нормализовать незапитанные входы к ключам r/g/b вне зависимости от режима (H/S/V/L → r/g/b).
-- Опционально подсказать список видимых входов.
-
-Экспортируемые функции:
-- handle(n, node_info: dict, params: dict, mat) -> None
-"""
 
 from typing import Any
 

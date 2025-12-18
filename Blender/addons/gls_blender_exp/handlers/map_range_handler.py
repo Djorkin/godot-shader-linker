@@ -1,14 +1,7 @@
 # SPDX-FileCopyrightText: 2025 D.Jorkin
 # SPDX-License-Identifier: GPL-3.0-or-later
 
-"""
-Обработчик ShaderNodeMapRange для экспортера GSL.
 
-Назначение:
-- Задать параметры data_type/mode/clamp из свойств узла Blender.
-- Оставить в params только актуальные (видимые) входы узла.
-- Перезаписать node_info["inputs"/"outputs"] на основании видимых сокетов.
-"""
 
 from __future__ import annotations
 

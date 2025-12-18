@@ -1,12 +1,6 @@
 # SPDX-FileCopyrightText: 2025 D.Jorkin
 # SPDX-License-Identifier: GPL-3.0-or-later
 
-"""
-Обработчик ShaderNodeTexNoise для экспортера GSL.
-
-Экспортируемые функции:
-- handle(n, node_info: dict, params: dict, mat) -> None
-"""
 
 def handle(n, node_info: dict, params: dict, mat) -> None:
     dims_map = {"1D": 0, "2D": 1, "3D": 2, "4D": 3}

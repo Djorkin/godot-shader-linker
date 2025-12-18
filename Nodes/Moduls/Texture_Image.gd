@@ -43,7 +43,7 @@ func get_include_files() -> Array[String]:
 	]
 
 func get_required_shared_varyings() -> Array[int]:
-	return [ShaderSpec.SharedVar.WORLD_NORMAL]
+	return [ShaderSpec.SharedVar.OBJECT_NORMAL]
 
 func get_uniform_definitions() -> Dictionary:
 	return {
@@ -70,7 +70,7 @@ func get_code_blocks() -> Dictionary:
 		"coord": coord_expr,
 		"color": outputs["Color"],
 		"alpha": outputs["Alpha"],
-		"world_normal": ShaderSpec.shared_var_name(ShaderSpec.SharedVar.WORLD_NORMAL),
+		"object_normal": ShaderSpec.shared_var_name(ShaderSpec.SharedVar.OBJECT_NORMAL),
 	}
 
 	var frag_code := """
@@ -84,7 +84,7 @@ params_{uid}.color_space    = u_{uid}_color_space;
 params_{uid}.alpha_mode     = u_{uid}_alpha_mode;
 
 vec4 tex_{uid} = _sample_image(vec3({coord}), 
-								{world_normal} * ROT_X(-90.0),
+								{object_normal} * ROT_X(-90.0),
 								u_{uid}_image_texture,
 								params_{uid});
 

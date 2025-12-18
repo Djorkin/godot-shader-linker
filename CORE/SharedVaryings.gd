@@ -54,6 +54,12 @@ var VARS := {
 		"v_assign": "%s = UV;" % ShaderSpec.shared_var_name(ShaderSpec.SharedVar.WORLD_UV),
 		"needs_ctx": false,
 	},
+	ShaderSpec.SharedVar.OBJECT_NORMAL: {
+		"type": "vec3",
+		"name": ShaderSpec.shared_var_name(ShaderSpec.SharedVar.OBJECT_NORMAL),
+		"v_assign": "%s = NORMAL;" % ShaderSpec.shared_var_name(ShaderSpec.SharedVar.OBJECT_NORMAL),
+		"needs_ctx": false,
+	},
 }
 
 func request(keys: Array) -> Dictionary:

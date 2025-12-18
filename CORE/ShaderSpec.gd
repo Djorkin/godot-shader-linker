@@ -6,7 +6,7 @@ class_name ShaderSpec
 enum ShaderType { INT, FLOAT, BOOL, VEC3, VEC4, SAMPLER2D }
 enum UniformHint { NONE, RANGE, ENUM, SOURCE_COLOR, SCREEN_TEXTURE, CUSTOM }
 enum Stage { GLOBAL, FUNCTIONS, VERTEX, FRAGMENT }
-enum SharedVar { WORLD_POS, WORLD_NORMAL, VIEW_POS, VIEW_NORMAL, WORLD_UV }
+enum SharedVar { WORLD_POS, WORLD_NORMAL, VIEW_POS, VIEW_NORMAL, WORLD_UV, OBJECT_NORMAL }
 enum InstanceUniform { BBOX }
 
 static func format_uniform_hint(hint, hint_params) -> String:
@@ -158,5 +158,7 @@ static func shared_var_name(var_enum: int) -> String:
 			return "sv_view_normal"
 		SharedVar.WORLD_UV:
 			return "sv_world_uv"
+		SharedVar.OBJECT_NORMAL:
+			return "sv_object_normal"
 		_:
 			return ""

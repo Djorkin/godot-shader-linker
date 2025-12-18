@@ -1,0 +1,26 @@
+@tool
+extends MarginContainer
+
+
+@onready var color_rect: TextureRect = %ColorRect
+@onready var info: Label = %Info
+@onready var button: Button = %Button
+@onready var shader = preload("res://addons/godot_shader_linker_(gsl)/UI/status_dot.gdshader")
+
+signal refresh_status
+
+func _ready() -> void:
+	button.icon = get_theme_icon("Reload", "EditorIcons")
+	color_rect.material = ShaderMaterial.new()
+	color_rect.material.shader = shader
+	color_rect.material.set_shader_parameter("dot_color", Color.GRAY)
+	color_rect.material.set_shader_parameter("radius", 0.1)
+	color_rect.material.set_shader_parameter("edge_smooth", 0.1)
+
+func set_status(status: ServerStatusListener.Status) -> void:
+	info.text = ServerStatusListener.get_status_message(status)
+	color_rect.material.set_shader_parameter("dot_color", ServerStatusListener.get_status_color(status))
+
+
+func _on_button_pressed() -> void:
+	refresh_status.emit()

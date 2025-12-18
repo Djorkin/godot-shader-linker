@@ -136,6 +136,6 @@ Links to specific references and formulas are also duplicated in the headers of 
 
 ## Links
 
-- Documentation: `docs/` (WIP)
-- Blender add‑on: `/Blender/` (WIP)
+- Blender add‑on: (https://github.com/Djorkin/godot-shader-linker/releases/tag/v0.3.0)
+
 

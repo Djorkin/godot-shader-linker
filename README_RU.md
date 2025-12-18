@@ -1,25 +1,45 @@
 # Godot Shader Linker (GSL)
 
-**GSL** — сборщик шейдерных графов для Godot 4.2+, который принимает описание нодовых сетей из внешних DCC и собирает эквивалентный шейдер под Godot. Ядро GSL портирует ноды (их семантику и формулы), а текущая техническая реализация ориентирована на граф материалов Blender (рендер EEVEE).
+**Godot Shader Linker** - инструмент для автоматического импорта нод‑графов материалов из Blender в Godot.
+Он конвертирует материалы **EEVEE** в Godot‑шейдеры одним кликом, сохраняя процедурную логику **без запекания текстур**.
+
+## Что делает плагин и зачем он нужен
+
+Обычные экспорты из Blender в игровые движки хорошо переносят геометрию и базовые PBR‑параметры, но почти всегда не переносят процедурность: нод‑граф материалов, процедурные текстуры и кастомную шейдерную логику. GSL это попытка сократить этот разрыв — он считывает нод‑граф EEVEE и генерирует аналогичный шейдер в Godot, сохраняя процедурную логику без запекания текстур.
+
+Плагин состоит из двух компонентов: Python‑аддон для Blender запускает локальный сервер
+и сериализует граф нод из Shader Editor, а GDScript‑плагин в Godot принимает эти данные и генерирует аналогичный шейдер.
+Кнопки **Link Shader** и **Link Material** создают готовые `.gdshader` и `.tres` файлы.
+
+Процедурные текстуры вычисляются на GPU Godot в реальном времени, а не запекаются -
+это позволяет анимировать параметры через GDScript или `AnimationPlayer`.
 
 ## Основные возможности
 
 * One-click import. Кнопки **Link Shader / Material** создают `.gdshader` и `.tres`.
-* Парсинг нодовой сети и генерация Godot-шейдера «на лету»
 * Процедурные текстуры — на стороне GPU Godot
 * Полная интеграция с экосистемой Godot (Inspector, WorldEnvironment, пост-процессы)
 * Анимации параметров через GDScript или `AnimationPlayer`
 
 ## Установка
+
 1. Скопируйте директорию `addons/godot_shader_linker_(gsl)` в проект Godot.  
 2. В **Project → Plugins** активируйте «Godot Shader Linker (GSL)».  
-3. В 3D-вью появится UI GSL (`Ctrl + G` — скрыть/показать).
+3. В нижней панели редактора (**Bottom Panel**) появится вкладка **Shader Linker**.
 
-### Настройка Blender-аддона
-1. **Edit → Preferences → File Paths → Scripts Directories → Add** — укажите путь `.../addons/godot_shader_linker_(gsl)/Blender`, `Name: gls_blender_exp`.  
-2. Перезапустите Blender и активируйте **GSL Exporter** (`Add-ons`).  
-3. В настройках аддона задайте путь к проекту **Godot** (нужно для импорта текстур).  
-4. Перейдите в Godot — в **Output** появится `Blender server started`.
+### Установка Blender-аддона
+
+#### Способ 1 — через zip (рекомендуется)
+1. В Blender откройте **Edit → Preferences → Add-ons → Install…**  
+2. Выберите архив `gls_blender_exp.zip`.  
+3. В списке аддонов включите **GSL Exporter**.  
+4. Перейдите в **Godot** - в панели **Shader Linker** статус станет `Status: Connected to Blender`.
+
+#### Способ 2 — через Scripts Directories (удобно для разработки)
+1. В Blender откройте **Edit → Preferences → File Paths → Scripts Directories → Add**.  
+2. Укажите путь на папку `.../addons/godot_shader_linker_(gsl)/Blender`, `Name: gls_blender_exp`.  
+3. Перезапустите Blender и активируйте **GSL Exporter** (`Add-ons`).  
+4. Перейдите в **Godot** - в панели **Shader Linker** статус станет `Status: Connected to Blender`.
 
 ## Быстрый старт
 1. В Blender выберите материал в **Shader Editor**.  
@@ -38,7 +58,7 @@
   - Fractal Noise
 
 - Цвет
-  - Color Ramp
+  - Color Ramp (Linear, Constant)
 
 - Преобразования
   - Combine Color
@@ -65,19 +85,19 @@
 * **SDFGI** работает некорректно с прозрачными материалами.
 * Для материалов с `Transmission > 0` выставьте `transparency > 0`, иначе объект будет чёрным.
 * Закрывайте шейдер в Shader Editor при перезаписи материала/шейдера, иначе будет версия, созданная ранее.
-* Если используете `Generated` координаты (например, Box‑проекции), перед просмотром результата выполните **Bake AABB** (запечка `bbox_min/bbox_max` в Instance Shader Parameters).
+* Если используете `Generated` координаты, перед просмотром результата выполните **Bake AABB** (запечка `bbox_min/bbox_max` в Instance Shader Parameters).
 * В отдельных сочетаниях узлов итоговый сигнал может оставаться нефильтрованным, что приводит к заметному алиасингу.
 
 ## Рекомендации по визуальному соответствию с Blender
 * Совместите перспективу камеры в Godot и Blender.  
 * Добавьте `WorldEnvironment`, загрузите ту же HDRI (`Sky`) и поверните на 90°.  
-* Во вкладке **Tonemap** выберите **AgX**.  
+* Во вкладке **Tonemap** выберите **Linear** или **AgX**.  
 
 ## Лицензия
 Проект распространяется на условиях **GPL-3.0-or-later**.
 
 ## Атрибуции
-Части реализации адаптированы из исходников Blender для достижения совпадения поведения (Blender распространяется по GPL-2.0-or-later):
+Части реализации адаптированы из исходников Blender для достижения совпадения поведения 1 в 1 (Blender исходники распространяется по GPL-2.0-or-later):
 
 - GPU Vector Math и утилиты:
   - source/blender/gpu/shaders/common/gpu_shader_math_vector_lib.glsl

@@ -1,6 +1,19 @@
 # Godot Shader Linker (GSL)
 
-**GSL** is a shader graph assembler for Godot 4.2+. It accepts node-graph descriptions from external DCC tools and assembles an equivalent Godot shader. The GSL core ports nodes (their semantics and formulas); the current technical implementation targets Blender's material graph (EEVEE).
+**GSL** is a tool for automatic import of Blender material node graphs into Godot.
+It converts **EEVEE** materials into Godot shaders in one click, preserving procedural logic **without baking textures**.
+
+## What it does (and why it exists)
+
+Typical Blender -> engine exports handle geometry and basic PBR values, but they usually **don’t transfer procedural material logic**:
+Blender node graphs, procedural textures, and custom shader behavior. As a result, models often arrive with “empty/white” materials,
+and you end up baking textures or rebuilding shaders manually.
+
+GSL bridges this gap. It consists of two parts: a Blender Python add‑on that runs a local server and serializes the Shader Editor node graph,
+and a Godot GDScript plug‑in that receives the data and generates an analogous shader. The **Link Shader** / **Link Material** buttons produce
+ready‑to‑use `.gdshader` and `.tres` files.
+
+Procedural textures are computed on the Godot GPU in real time (not baked), so you can animate parameters via GDScript or `AnimationPlayer`.
 
 ## Key Features
 
@@ -26,13 +39,20 @@
 ## Installation
 1. Copy the `addons/godot_shader_linker_(gsl)` directory into your Godot project.  
 2. In **Project → Plugins** enable “Godot Shader Linker (GSL)”.  
-3. The GSL UI will appear in the 3D viewport (`Ctrl + G` — hide/show).
+3. A **Shader Linker** tab will appear in the editor **Bottom Panel**.
 
 ### Setting up the Blender add‑on
-1. **Edit → Preferences → File Paths → Scripts Directories → Add** — specify the path `.../addons/godot_shader_linker_(gsl)/Blender`, `Name: gls_blender_exp`.  
-2. Restart Blender and enable **GSL Exporter** (`Add-ons`).  
-3. In the add‑on settings set the path to your **Godot** project (needed to import textures).  
-4. Switch to Godot — `Blender server started` will appear in **Output**.
+#### Method 1 — install from zip (recommended)
+1. Blender → **Edit → Preferences → Add-ons → Install…**  
+2. Select `gls_blender_exp.zip`.  
+3. Enable **GSL Exporter** in the add‑ons list.  
+4. Switch to Godot — the **Shader Linker** panel will show `Status: Connected to Blender`.
+
+#### Method 2 — Scripts Directories (convenient for development)
+1. Blender → **Edit → Preferences → File Paths → Scripts Directories → Add**  
+2. Point it to `.../addons/godot_shader_linker_(gsl)/Blender` (or directly to `.../Blender/addons`, where `gls_blender_exp` lives).  
+3. Restart Blender and enable **GSL Exporter** (`Add-ons`).  
+4. Switch to Godot — the **Shader Linker** panel will show `Status: Connected to Blender`.
 
 ## Quick Start
 1. In Blender select a material in the **Shader Editor**.  
@@ -79,7 +99,7 @@
 - SDFGI works incorrectly with transparent materials.
 - For materials with `Transmission > 0`, set `transparency > 0`, otherwise the object will appear black.
 - Before overwriting a material/shader, close it in Shader Editor — otherwise a previous version may remain in the project.
-- If you rely on `Generated` coordinates (e.g. Box projection), run **Bake AABB** first (bakes `bbox_min/bbox_max` into Instance Shader Parameters).
+- If you rely on `Generated` coordinates, run **Bake AABB** first (bakes `bbox_min/bbox_max` into Instance Shader Parameters).
 - In certain node combinations the final signal may remain unfiltered, leading to noticeable aliasing.
 
 ## Visual Match Recommendations (with Blender)

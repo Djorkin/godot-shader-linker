@@ -1,19 +1,6 @@
 # SPDX-FileCopyrightText: 2025 D.Jorkin
 # SPDX-License-Identifier: GPL-3.0-or-later
 
-"""
-Экспорт материалов: преобразование графа узлов Blender в структуру для JSON.
-
-Назначение:
-- Сбор описания активного материала в главном потоке.
-- Унификация параметров узлов и делегирование специфики в handlers.
-
-Экспортируемые функции:
-- collect_material_data() -> dict
-- gather_material() -> dict
-"""
-
-
 import threading
 
 try:
@@ -22,11 +9,8 @@ except Exception:  # pragma: no cover
     bpy = None  # type: ignore
 
 from .utils import make_node_id as _make_node_id, bl_to_gsl_class
-from .logger import get_logger
 from .registry import get_node_handler
 from .link_adapters import get_link_adapter
-
-logger = get_logger().getChild("exporter")
 
 
 def _is_visible_socket(s) -> bool:
@@ -44,9 +28,6 @@ def _is_visible_socket(s) -> bool:
 
 
 def collect_material_data() -> dict:
-    """Возвращает описание текущего материала, выполняясь гарантированно в главном потоке Blender.
-    Если вызвано не из главного потока, выполнение делегируется через bpy.app.timers.
-    """
     if bpy is None:
         return {"error": "bpy unavailable"}
 
@@ -68,14 +49,12 @@ def collect_material_data() -> dict:
     bpy.app.timers.register(_task)
 
     if not done_evt.wait(timeout=2.0):
-        logger.warning("Timeout waiting for main thread in collect_material_data")
         return {"error": "timeout"}
     return result_holder.get("data", {"error": "unknown"})
 
 
 
 def gather_material() -> dict:
-    """Сбор данных о материале. Обязательно вызывать из главного потока!"""
     obj = bpy.context.object  # type: ignore[attr-defined]
     if obj is None:
         return {"error": "no active object"}
@@ -199,7 +178,5 @@ def gather_material() -> dict:
         "nodes": nodes,
         "links": links,
     }
-
-    logger.info(f"Material exported: name='{mat.name}', nodes={len(nodes)}, links={len(links)}")
 
     return data

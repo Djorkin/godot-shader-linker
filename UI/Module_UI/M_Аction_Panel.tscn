@@ -1,0 +1,81 @@
+[gd_scene load_steps=4 format=3 uid="uid://56ks3sis6cd6"]
+
+[ext_resource type="Script" uid="uid://lapg4pwmic8w" path="res://addons/godot_shader_linker_(gsl)/UI/Module_UI/m_аction_panel.gd" id="1_gxkhg"]
+[ext_resource type="StyleBox" uid="uid://db5gmvslnk7yq" path="res://addons/godot_shader_linker_(gsl)/UI/Style/Button_Normal.tres" id="1_ombio"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_gxkhg"]
+content_margin_top = 15.0
+bg_color = Color(0.0402471, 0.048440956, 0.059361808, 0.5529412)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+
+[node name="Action_Panel" type="PanelContainer"]
+custom_minimum_size = Vector2(200, 0)
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_gxkhg")
+script = ExtResource("1_gxkhg")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="."]
+layout_mode = 2
+theme_override_constants/separation = 4
+metadata/_edit_use_anchors_ = true
+
+[node name="MarginContainer" type="MarginContainer" parent="VBoxContainer"]
+layout_mode = 2
+theme_override_constants/margin_left = 12
+theme_override_constants/margin_right = 12
+
+[node name="Create Shader" type="Button" parent="VBoxContainer/MarginContainer"]
+layout_mode = 2
+theme_override_styles/normal = ExtResource("1_ombio")
+text = "Link Shader"
+
+[node name="MarginContainer2" type="MarginContainer" parent="VBoxContainer"]
+layout_mode = 2
+theme_override_constants/margin_left = 12
+theme_override_constants/margin_top = 1
+theme_override_constants/margin_right = 12
+theme_override_constants/margin_bottom = 1
+
+[node name="Create Material" type="Button" parent="VBoxContainer/MarginContainer2"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_styles/normal = ExtResource("1_ombio")
+text = "Link  Material"
+
+[node name="MarginContainer3" type="MarginContainer" parent="VBoxContainer"]
+layout_mode = 2
+theme_override_constants/margin_left = 12
+theme_override_constants/margin_top = 1
+theme_override_constants/margin_right = 12
+theme_override_constants/margin_bottom = 1
+
+[node name="Bake AABB" type="Button" parent="VBoxContainer/MarginContainer3"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_styles/normal = ExtResource("1_ombio")
+text = "Bake AABB"
+
+[node name="MarginContainer5" type="MarginContainer" parent="VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 10
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 4
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 4
+
+[node name="Label" type="LinkButton" parent="VBoxContainer/MarginContainer5"]
+layout_mode = 2
+text = "GSL v.0.3"
+underline = 1
+uri = "https://github.com/Djorkin/godot-shader-linker"
+
+[connection signal="pressed" from="VBoxContainer/MarginContainer/Create Shader" to="." method="_on_create_shader_pressed"]
+[connection signal="pressed" from="VBoxContainer/MarginContainer2/Create Material" to="." method="_on_create_material_pressed"]
+[connection signal="pressed" from="VBoxContainer/MarginContainer3/Bake AABB" to="." method="_on_bake_aabb_pressed"]

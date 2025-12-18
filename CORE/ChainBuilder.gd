@@ -5,7 +5,7 @@ var mapper_inst: Mapper = Mapper.new()
 var linker_inst: Linker = Linker.new()
 var collector_inst: Collector = Collector.new()
 var builder_inst: ShaderBuilder = ShaderBuilder.new()
-
+var logger: GslLogger = GslLogger.get_logger()
 var nodes: Dictionary = {} # uid -> ShaderModule
 
 
@@ -15,11 +15,9 @@ func clear() -> void:
 	nodes.clear()
 
 
-# Регистрируем заранее созданный модуль и (опционально) применяем params
-# Возвращаем его уникальный uid (module.unique_id)
 func add_module(module: ShaderModule, params: Dictionary = {}) -> String:
 	if module == null:
-		push_error("add_module: module is null")
+		logger.log_error("add_module: module is null")
 		return ""
 	var uid := String(module.unique_id)
 	mapper_inst.add_module(module, params)
@@ -30,7 +28,7 @@ func add_module(module: ShaderModule, params: Dictionary = {}) -> String:
 func set_param(node_id: String, name, value) -> void:
 	var m: ShaderModule = nodes.get(node_id, null)
 	if m == null:
-		push_error("set_param: node not found %s" % node_id)
+		logger.log_error("set_param: node not found %s" % node_id)
 		return
 	var pname := ""
 	match typeof(name):
@@ -38,15 +36,15 @@ func set_param(node_id: String, name, value) -> void:
 			if m.has_method("param_name"):
 				pname = String(m.param_name(int(name)))
 			else:
-				push_error("set_param: module %s doesn't support enum parameters" % node_id)
+				logger.log_error("set_param: module %s doesn't support enum parameters" % node_id)
 				return
 		_:
 			pname = String(name)
-	# Сначала пытаемся как экспортное свойство
+
 	if has_property(m, pname):
 		m.set(pname, value)
 		return
-	# Затем как униформ (и его lower-case вариант)
+
 	var udefs = m.get_uniform_definitions()
 	if udefs.has(pname):
 		m.set_uniform_override(pname, value)
@@ -55,7 +53,7 @@ func set_param(node_id: String, name, value) -> void:
 	if udefs.has(lname):
 		m.set_uniform_override(lname, value)
 		return
-	push_warning("set_param: parameter '%s' not found on %s" % [pname, m.module_name])
+	logger.log_warning("set_param: parameter '%s' not found on %s" % [pname, m.module_name])
 
 
 # Линковка по enum сокетам (enum — это int)
@@ -63,13 +61,12 @@ func link(from_id: String, from_socket: int, to_id: String, to_socket: int) -> v
 	var a: ShaderModule = nodes.get(from_id, null)
 	var b: ShaderModule = nodes.get(to_id, null)
 	if a == null or b == null:
-		push_error("link: node not found (%s -> %s)" % [from_id, to_id])
+		logger.log_error("link: node not found (%s -> %s)" % [from_id, to_id])
 		return
 	linker_inst.link_modules(a, from_socket, b, to_socket)
 
 
 func build(shader_type: String = "spatial") -> ShaderBuilder:
-	# Обнуляем билдер, чтобы исключить накопление кода между пересборками
 	builder_inst = ShaderBuilder.new()
 	collector_inst.registered_modules.clear()
 	var chain: Array[ShaderModule] = mapper_inst.build_final_chain()

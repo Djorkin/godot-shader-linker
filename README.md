@@ -79,7 +79,7 @@
 - SDFGI works incorrectly with transparent materials.
 - For materials with `Transmission > 0`, set `transparency > 0`, otherwise the object will appear black.
 - Before overwriting a material/shader, close it in Shader Editor — otherwise a previous version may remain in the project.
-- In v0.2, after the first material import, a visual stretching may occur. Press the CPU DATA button to refresh data and fix the display.
+- If you rely on `Generated` coordinates (e.g. Box projection), run **Bake AABB** first (bakes `bbox_min/bbox_max` into Instance Shader Parameters).
 - In certain node combinations the final signal may remain unfiltered, leading to noticeable aliasing.
 
 ## Visual Match Recommendations (with Blender)
